@@ -19,6 +19,10 @@ public class Task {
 	}
 	
 	/* Mutators */
+	public void setName(String name) {
+		_name = name;
+	}
+	
 	public void setDescription(String description) {
 		_description = new String(description);
 	}
@@ -62,15 +66,6 @@ public class Task {
 		_dueDate = new GregorianCalendar(dueYear, dueMonth + CALENDAR_MONTH_OFFSET, dueDay);
 	}
 
-	public static int changeFromDateStringToDateInt(String dueDateString) {
-		if(dueDateString.charAt(0) == '0') {
-			dueDateString = dueDateString.replaceFirst("0", "");
-		}
-		
-		int dueDateInt = Integer.valueOf(dueDateString);
-		return dueDateInt;
-	}
-
 	private int formatToDDMMYYYY(int dateInt) {
 		if(dateInt > 3012) {
 			return dateInt;
@@ -81,26 +76,6 @@ public class Task {
 			dateInt += today.get(Calendar.YEAR);
 			return dateInt;
 		}
-	}
-	
-	public static int decodeYearFromDate(int date) {
-		return date%10000;
-	}
-	
-	public static int decodeMonthFromDate(int date) {
-		int month = (date%1000000)/10000;
-		if(month/10 == 0) {
-			month = month%10;
-		}
-		return month;
-	}
-
-	public static int decodeDayFromDate(int date) {
-		int day = date/1000000;
-		if(day/10 == 0) {
-			day = day%10;
-		}
-		return day;
 	}
 	
 	public void setCompleted() {
@@ -123,7 +98,7 @@ public class Task {
 	public void setShouldNotSync() {
 		_shouldSync = false;
 	}
-	
+
 	/* Accessors */
 	public String getName() {
 		return _name;
@@ -157,5 +132,34 @@ public class Task {
 		return _shouldSync;
 	}
 	
+	/* Static methods */
+	public static int decodeYearFromDate(int date) {
+		return date%10000;
+	}
 	
+	public static int decodeMonthFromDate(int date) {
+		int month = (date%1000000)/10000;
+		if(month/10 == 0) {
+			month = month%10;
+		}
+		return month;
+	}
+
+	public static int decodeDayFromDate(int date) {
+		int day = date/1000000;
+		if(day/10 == 0) {
+			day = day%10;
+		}
+		return day;
+	}
+	
+	public static int changeFromDateStringToDateInt(String dueDateString) {
+		if(dueDateString.charAt(0) == '0') {
+			dueDateString = dueDateString.replaceFirst("0", "");
+		}
+		
+		int dueDateInt = Integer.valueOf(dueDateString);
+		return dueDateInt;
+	}
+
 }

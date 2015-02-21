@@ -17,7 +17,7 @@ public class QLLogicTest {
 	@Test
 	public void testExecuteCommand() {
 		
-		// Add command
+		/** Add **/
 		StringBuilder feedback = new StringBuilder();
 		LinkedList<Task> testList; 
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
@@ -79,11 +79,42 @@ public class QLLogicTest {
 		testList = QLLogic.executeCommand("add task 6 -q 32131990 -g H", feedback);
 		assertEquals(feedback.toString(), "Invalid field type \"q\".\nInvalid field type \"g\".\n");
 		assertEquals(testList.peekLast().getName(), "task 6");
+		feedback.setLength(0);		
+		
+		/** Edit **/
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 2202", feedback);
+		QLLogic.executeCommand("add task two -p M -d 2302", feedback);
+		QLLogic.executeCommand("add task three -d 24022016 -p H", feedback);
+		
+		testList = QLLogic.executeCommand("edit 1 -n task 1", feedback);
+		assertEquals(testList.get(0).getName(), "task 1");
+		testList = QLLogic.executeCommand("edit 2 -pL", feedback);
+		assertEquals(testList.get(1).getPriority(), 'L');
+		testList = QLLogic.executeCommand("edit 3 -d  24022015", feedback);
+		assertEquals(sdf.format(testList.get(2).getDueDate().getTime()), "24.02.2015");
+		
+		testList = QLLogic.executeCommand("edit 1 -p H -d 2302 -n task one", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(0).getPriority(), 'H');
+		assertEquals(sdf.format(testList.get(0).getDueDate().getTime()), "23.02.2015");
+		
 		feedback.setLength(0);
+		testList = QLLogic.executeCommand("edit 1 -e H -d 2202 -q task one", feedback);
+		assertEquals(sdf.format(testList.get(0).getDueDate().getTime()), "22.02.2015");
+		assertEquals(feedback.toString(), "Invalid field type \"e\".\nInvalid field type \"q\".\n");
 		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("edit 1 -d 12341990 -n task 1", feedback);
+		assertEquals(testList.get(0).getName(), "task 1");
+		assertEquals(feedback.toString(), "Invalid month entered. Date not set. Please set due/start date using EDIT.");
 		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("edit 1 -d 1234199", feedback);
+		assertEquals(feedback.toString(), "Invalid date format entered. Date not set. Please set due/start date using EDIT.");
 		
-		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("edit 1 -n ", feedback);
+		assertEquals(feedback.toString(), "Invalid task name. Task name not changed.");
 	}
-
 }
