@@ -3,16 +3,17 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
-	private static final String MESSAGE_INVALID_NAME = "Invalid task name. Task name not changed.";
+	private static final String COMMAND_COMPLETE_ABBREV = "c";
+	private static final String COMMAND_COMPLETE = "complete";
 	private static final String MESSAGE_INVALID_PRIORITY_LEVEL = "Invalid priority level. Priority level not set. Please set priority level using EDIT.";
 	private static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\".";
 	private static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed.";
-	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. No task is added.";
+	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed.";
 	private static final String MESSAGE_INVALID_MONTH = "Invalid month entered. Date not set. Please set due/start date using EDIT.";
 	private static final String MESSAGE_INVALID_DAY = "Invalid day entered. Date not set. Please set due/start date using EDIT.";
 	private static final String MESSAGE_INVALID_DATE_FORMAT = "Invalid date format entered. Date not set. Please set due/start date using EDIT.";
-	private static final String MESSAGE_TASK_NUMBER_OUT_OF_RANGE = "Task number entered out of range. No task is edited.";
-	private static final String MESSAGE_INVALID_TASK_NUMBER = "Invalid task number entered. No task is edited.";
+	private static final String MESSAGE_TASK_NUMBER_OUT_OF_RANGE = "Task number entered out of range. Nothing is executed.";
+	private static final String MESSAGE_INVALID_TASK_NUMBER = "Invalid task number entered. Nothing is executed.";
 	
 	private static final int INDEX_COMMAND = 0;
 	private static final int INDEX_FIELDS = 1;
@@ -29,6 +30,8 @@ public class QLLogic {
 	private static final String COMMAND_ADD = "add";
 	private static final String COMMAND_EDIT_ABBREV = "e";
 	private static final String COMMAND_EDIT = "edit";
+	private static final String COMMAND_DELETE_ABBREV = "d";
+	private static final String COMMAND_DELETE = "delete";
 	
 	private static final String STRING_NO_CHAR = "";
 	private static final String STRING_BLANK_SPACE = " ";
@@ -55,13 +58,19 @@ public class QLLogic {
 		else if(command.equalsIgnoreCase(COMMAND_EDIT) || command.equalsIgnoreCase(COMMAND_EDIT_ABBREV)) {
 			return executeEdit(fieldLine, feedback);
 		}
+		else if(command.equalsIgnoreCase(COMMAND_DELETE) || command.equalsIgnoreCase(COMMAND_DELETE_ABBREV)) {
+			return executeDelete(fieldLine, feedback);
+		} 
+		else if(command.equalsIgnoreCase(COMMAND_COMPLETE) || command.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
+			return executeComplete(fieldLine, feedback);
+		}
 		
 		else {
 			feedback.append(MESSAGE_INVALID_COMMAND);
 			return null;
 		}
 	}
-	
+
 	//TODO change to private
 	public static void clearWorkingList() {
 		_workingList = new LinkedList<Task>();
@@ -119,6 +128,46 @@ public class QLLogic {
 		return true;
 	}
 
+	private static int extractAndCheckTaskNumber(String fieldLineWithTaskNumber, StringBuilder feedback) {
+		String taskNumberString = extractTaskNumberString(fieldLineWithTaskNumber);
+		if(isValidTaskNumber(taskNumberString, feedback)) {
+			return Integer.parseInt(taskNumberString);
+		} 
+		else {
+			return NUM_INVALID_TASK_NUMBER;
+		}
+	}
+
+	private static String extractTaskNumberString(String fieldLineWithTaskNumber) {
+		int taskNumberEndIndex = fieldLineWithTaskNumber.length();
+		for(int i = 0; i < fieldLineWithTaskNumber.length(); i++) {
+			if(fieldLineWithTaskNumber.charAt(i) == ' ') {
+				taskNumberEndIndex = i;
+				break;
+			}
+		}
+		return fieldLineWithTaskNumber.substring(0, taskNumberEndIndex).trim();
+	}
+	
+	private static boolean isValidTaskNumber(String taskNumberString, StringBuilder feedback) {
+		try {
+			if(taskNumberString.equals(STRING_NO_CHAR)) {
+				feedback.append(MESSAGE_INVALID_TASK_NUMBER);
+				return false;
+			} 
+			
+
+			if(Integer.parseInt(taskNumberString) > _workingList.size() || Integer.parseInt(taskNumberString) < 1) {
+				feedback.append(MESSAGE_TASK_NUMBER_OUT_OF_RANGE);
+				return false;
+			}
+			return true;
+		} catch(NumberFormatException e) {
+			feedback.append(MESSAGE_INVALID_TASK_NUMBER);
+			return false;
+		}
+	}
+
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
 		if(field.equals(STRING_NO_CHAR)) {
@@ -148,7 +197,7 @@ public class QLLogic {
 	
 	private static void updateName(Task task, StringBuilder feedback, String fieldContent) {
 		if(fieldContent.equals(STRING_NO_CHAR)) {
-			feedback.append(MESSAGE_INVALID_NAME);
+			feedback.append(MESSAGE_INVALID_TASK_NAME);
 			return;
 		}
 		task.setName(fieldContent);
@@ -215,7 +264,7 @@ public class QLLogic {
 	}
 	
 	private static String extractTaskName(String fieldLineWithName) {
-		int taskNameEndIndex = 0;
+		int taskNameEndIndex = fieldLineWithName.length();
 		for(int i = 0; i < fieldLineWithName.length(); i++) {
 			if(fieldLineWithName.charAt(i) == '-') {
 				taskNameEndIndex = i;
@@ -255,56 +304,48 @@ public class QLLogic {
 		return _workingList;
 	}
 
-	private static int extractAndCheckTaskNumber(String fieldLineWithTaskNumber, StringBuilder feedback) {
-		String taskNumberString = extractTaskNumberString(fieldLineWithTaskNumber);
-		if(isValidTaskNumber(taskNumberString, feedback)) {
-			return Integer.parseInt(taskNumberString);
-		} 
-		else {
-			return NUM_INVALID_TASK_NUMBER;
+	/** Delete methods **/
+	private static LinkedList<Task> executeDelete(String fieldLineWithTaskNumber, StringBuilder feedback) {
+		int taskNumber = extractAndCheckTaskNumber(fieldLineWithTaskNumber, feedback);
+		if(taskNumber == NUM_INVALID_TASK_NUMBER) {
+			return _workingList;
 		}
+		
+		deleteTask(taskNumber, feedback);
+		
+		QLStorage.saveFile(_workingList, _fileName);
+		return _workingList;
 	}
 
-	private static String extractTaskNumberString(String fieldLineWithTaskNumber) {
-		int taskNumberEndIndex = 0;
-		for(int i = 0; i < fieldLineWithTaskNumber.length(); i++) {
-			if(fieldLineWithTaskNumber.charAt(i) == '-') {
-				taskNumberEndIndex = i;
-				break;
-			}
+	private static void deleteTask(int taskNumber, StringBuilder feedback) {
+		_workingList.remove(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
+	}
+
+	/** Complete methods **/
+	private static LinkedList<Task> executeComplete(String fieldLineWithTaskNumber, StringBuilder feedback) {
+		int taskNumber = extractAndCheckTaskNumber(fieldLineWithTaskNumber, feedback);
+		if(taskNumber == NUM_INVALID_TASK_NUMBER) {
+			return _workingList;
 		}
-		return fieldLineWithTaskNumber.substring(0, taskNumberEndIndex).trim();
+		
+		completeTask(taskNumber, feedback);
+		
+		QLStorage.saveFile(_workingList, _fileName);
+		return _workingList;
 	}
 	
-	private static boolean isValidTaskNumber(String taskNumberString, StringBuilder feedback) {
-		try {
-			if(taskNumberString.equals(STRING_NO_CHAR)) {
-				feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-				return false;
-			} 
-			
-
-			if(Integer.parseInt(taskNumberString) > _workingList.size()) {
-				feedback.append(MESSAGE_TASK_NUMBER_OUT_OF_RANGE);
-				return false;
-			}
-			return true;
-		} catch(NumberFormatException e) {
-			feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-			return false;
+	private static void completeTask(int taskNumber, StringBuilder feedback) {
+		Task taskToChange = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
+		if(taskToChange.getIsCompleted()) {
+			taskToChange.setNotCompleted();
+		} 
+		else {
+			taskToChange.setCompleted();
 		}
 	}
 
 	/** Main method **/
 	public static void main(String args[]) {
-		_workingList = new LinkedList<Task>();
-		
-		StringBuilder feedback = new StringBuilder();
-		LinkedList<Task> testList; 
-		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-		
-		testList = executeCommand("add task one -p L -d 2202", feedback);
-	
 	}
 	
 }

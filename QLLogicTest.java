@@ -39,7 +39,7 @@ public class QLLogicTest {
 		assertEquals(sdf.format(testList.peekLast().getDueDate().getTime()), "01.11.1990");
 		
 		testList = QLLogic.executeCommand("add", feedback);
-		assertEquals(feedback.toString(), "Invalid task name entered. No task is added.");
+		assertEquals(feedback.toString(), "Invalid task name entered. Nothing is executed.");
 		assertEquals(testList.peekLast().getName(), "task one");
 		feedback.setLength(0);
 		
@@ -115,6 +115,45 @@ public class QLLogicTest {
 		
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("edit 1 -n ", feedback);
-		assertEquals(feedback.toString(), "Invalid task name. Task name not changed.");
+		assertEquals(feedback.toString(), "Invalid task name entered. Nothing is executed.");
+		
+		/** Delete **/
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 2202", feedback);
+		QLLogic.executeCommand("add task two -p M -d 2302", feedback);
+		QLLogic.executeCommand("add task three -d 24022016 -p H", feedback);
+		
+		testList = QLLogic.executeCommand("delete 2", feedback);
+		assertEquals(testList.get(1).getName(), "task three");
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("d 4 ", feedback);
+		assertEquals(feedback.toString(), "Task number entered out of range. Nothing is executed.");
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("d  ", feedback);
+		assertEquals(feedback.toString(), "Invalid task number entered. Nothing is executed.");
+		
+		/** Completed **/
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 2202", feedback);
+		QLLogic.executeCommand("add task two -p M -d 2302", feedback);
+		QLLogic.executeCommand("add task three -d 24022016 -p H", feedback);
+		
+		testList = QLLogic.executeCommand("c 2", feedback);
+		assertTrue(testList.get(1).getIsCompleted());
+		
+		testList = QLLogic.executeCommand("c 2", feedback);
+		assertFalse(testList.get(1).getIsCompleted());
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("c 4 ", feedback);
+		assertEquals(feedback.toString(), "Task number entered out of range. Nothing is executed.");
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("complete  ", feedback);
+		assertEquals(feedback.toString(), "Invalid task number entered. Nothing is executed.");
+		
 	}
+	
 }
