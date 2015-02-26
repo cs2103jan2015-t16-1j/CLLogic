@@ -6,9 +6,15 @@ import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class QLLogicTest {
-
+	
+	/* Messages for feedback */
+	private static final String MESSAGE_NO_TASK_SATISFY_CRITERIA = "No task satisfies criteria entered.";
+	private static final String MESSAGE_INVALID_PRIORITY_LEVEL = "Invalid priority level.";
+	private static final String MESSAGE_INVALID_MONTH = "Invalid month entered.";
+	private static final String MESSAGE_INVALID_DAY = "Invalid day entered.";
+	private static final String MESSAGE_INVALID_DATE_FORMAT = "Invalid date format entered.";
+	
 	@Before
 	public void setup() {
 		QLLogic._workingList = new LinkedList<Task>();
@@ -44,30 +50,30 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task two -d 32111990", feedback);
-		assertEquals(feedback.toString(), "Invalid day entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DAY);
 		assertEquals(testList.peekLast().getName(), "task two");
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task two -d 31131990", feedback);
-		assertEquals(feedback.toString(), "Invalid month entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_MONTH);
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task two -d 32131990", feedback);
-		assertEquals(feedback.toString(), "Invalid day entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DAY);
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task 3 -d", feedback);
-		assertEquals(feedback.toString(), "Invalid date format entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), "Invalid date format entered.");
 		assertEquals(testList.peekLast().getName(), "task 3");
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task 4 -p", feedback);
-		assertEquals(feedback.toString(), "Invalid priority level. Priority level not set. Please set priority level using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_PRIORITY_LEVEL);
 		assertEquals(testList.peekLast().getName(), "task 4");
 		feedback.setLength(0);
 		
 		testList = QLLogic.executeCommand("add task 1 -p P", feedback);
-		assertEquals(feedback.toString(), "Invalid priority level. Priority level not set. Please set priority level using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_PRIORITY_LEVEL);
 		assertEquals(testList.peekLast().getName(), "task 1");
 		feedback.setLength(0);
 		
@@ -107,11 +113,11 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("edit 1 -d 12341990 -n task 1", feedback);
 		assertEquals(testList.get(0).getName(), "task 1");
-		assertEquals(feedback.toString(), "Invalid month entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_MONTH);
 		
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("edit 1 -d 1234199", feedback);
-		assertEquals(feedback.toString(), "Invalid date format entered. Date not set. Please set due/start date using EDIT.");
+		assertEquals(feedback.toString(), "Invalid date format entered.");
 		
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("edit 1 -n ", feedback);
@@ -153,6 +159,202 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("complete  ", feedback);
 		assertEquals(feedback.toString(), "Invalid task number entered. Nothing is executed.");
+		
+		/** List **/
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("list -d 2302", feedback);
+		assertEquals(testList.peek().getName(), "task two");
+		
+		testList = QLLogic.executeCommand("list -d TDY", feedback);
+		assertEquals(testList.peek().getName(), "task two");
+		
+		feedback.setLength(0);
+		testList = QLLogic.executeCommand("list -d TMR", feedback);
+		assertEquals(feedback.toString(), "No task satisfies criteria entered.");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 2302:2402", feedback);
+		assertEquals(testList.get(0).getName(), "task two");
+		assertEquals(testList.get(1).getName(), "task three");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d TDY:TMR", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(1).getName(), "task two");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 0101:TDY", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(1).getName(), "task two");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 0202:TDY", feedback);
+		assertEquals(testList.get(0).getName(), "task two");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d TDY", feedback);
+		assertEquals(testList.get(0).getName(), "task two");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0202 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 0902:TDY", feedback);
+		assertEquals(testList.get(0).getName(), "task three");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0202 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 0102:0902", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(1).getName(), "task two");
+		assertEquals(testList.get(2).getName(), "task three");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2302 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 3201:TDY", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DAY + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		testList = QLLogic.executeCommand("list -d 2301:2214", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_MONTH + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		testList = QLLogic.executeCommand("list -d 321:123", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DATE_FORMAT + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		testList = QLLogic.executeCommand("list -d 0102:0602 -p M", feedback);
+		assertEquals(feedback.toString(), "");
+		assertEquals(testList.get(0).getName(), "task two");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
+		testList = QLLogic.executeCommand("list -d 0102:0802 -p M", feedback);
+		assertEquals(feedback.toString(), "");
+		assertEquals(testList.get(0).getName(), "task two");
+		assertEquals(testList.get(1).getName(), "task four");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
+		testList = QLLogic.executeCommand("list -d 0102:0802 -p M", feedback);
+		assertEquals(feedback.toString(), "");
+		assertEquals(testList.get(0).getName(), "task two");
+		assertEquals(testList.get(1).getName(), "task four");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		testList = QLLogic.executeCommand("list -p G", feedback);
+		assertEquals(feedback.toString(), MESSAGE_INVALID_PRIORITY_LEVEL + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
+		testList = QLLogic.executeCommand("list -c Y", feedback);
+		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
+		QLLogic.executeCommand("c 3", feedback);
+		testList = QLLogic.executeCommand("list -c Y", feedback);
+		assertEquals(testList.get(0).getName(), "task three");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 0502 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
+		testList = QLLogic.executeCommand("list -o N", feedback);
+		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2802 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2502 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0902 -p M", feedback);
+		testList = QLLogic.executeCommand("list -o Y", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(1).getName(), "task four");
+		assertEquals(feedback.toString(), "");
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		testList = QLLogic.executeCommand("list -l Y", feedback);
+		assertEquals(feedback.toString(), "Invalid field type \"l\".\n" + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		
+		feedback.setLength(0);
+		QLLogic.clearWorkingList(); 
+		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
+		QLLogic.executeCommand("add task two  -d 2802 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2502 -p H", feedback);
+		QLLogic.executeCommand("add task four -d 0902 -p M", feedback);
+		testList = QLLogic.executeCommand("list -d 2502", feedback);
+		assertEquals(testList.get(0).getName(), "task three");
+		testList = QLLogic.executeCommand("list", feedback);
+		assertEquals(testList.get(0).getName(), "task one");
+		assertEquals(testList.get(3).getName(), "task four");
+
+		
 		
 	}
 	
