@@ -1,9 +1,13 @@
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 
 public class QLLogic {
 
+
+
+	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
+	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
+	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
 	private static final String MESSAGE_INVALID_YES_NO = "Invalid yes/no field. Please use Y for yes and N for no.";
 	private static final String MESSAGE_NO_TASK_SATISFY_CRITERIA = "No task satisfies criteria entered.";
 	private static final String MESSAGE_NO_DATE_ENTERED = "No date entered.";
@@ -31,6 +35,10 @@ public class QLLogic {
 	
 	private static final int OFFSET_TASK_NUMBER_TO_INDEX = -1;
 	
+	private static final String COMMAND_FIND = "find";
+	private static final String COMMAND_FIND_ABBREV = "f";
+	private static final String COMMAND_SORT = "s";
+	private static final String COMMAND_SORT_ABBREV = "sort";
 	private static final String COMMAND_ADD_ABBREV = "a";
 	private static final String COMMAND_ADD = "add";
 	private static final String COMMAND_EDIT_ABBREV = "e";
@@ -47,11 +55,13 @@ public class QLLogic {
 	private static final String STRING_DASH = "-";
 	private static final String STRING_NO = "N";
 	private static final String STRING_YES = "Y";
+	private static final String STRING_NEW_LINE = "\n";
 	
 	private static final char CHAR_NO_PRIORITY_LEVEL = 'N';
-	
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("dMMyyyy");
+	private static final char CHAR_DESCENDING = 'd';
+	private static final char CHAR_ASCENDING = 'a';
 
+	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
 	private static String _fileName;
 	
@@ -69,22 +79,21 @@ public class QLLogic {
 				
 		if(command.equalsIgnoreCase(COMMAND_ADD) || command.equalsIgnoreCase(COMMAND_ADD_ABBREV)) {
 			return executeAdd(fieldLine, feedback);
-		}
-		else if(command.equalsIgnoreCase(COMMAND_EDIT) || command.equalsIgnoreCase(COMMAND_EDIT_ABBREV)) {
+		} else if(command.equalsIgnoreCase(COMMAND_EDIT) || command.equalsIgnoreCase(COMMAND_EDIT_ABBREV)) {
 			return executeEdit(fieldLine, feedback);
-		}
-		else if(command.equalsIgnoreCase(COMMAND_DELETE) || command.equalsIgnoreCase(COMMAND_DELETE_ABBREV)) {
+		} else if(command.equalsIgnoreCase(COMMAND_DELETE) || command.equalsIgnoreCase(COMMAND_DELETE_ABBREV)) {
 			return executeDelete(fieldLine, feedback);
-		} 
-		else if(command.equalsIgnoreCase(COMMAND_COMPLETE) || command.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
+		} else if(command.equalsIgnoreCase(COMMAND_COMPLETE) || command.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
 			return executeComplete(fieldLine, feedback);
-		}
-		else if(command.equalsIgnoreCase(COMMAND_LIST) || command.equalsIgnoreCase(COMMAND_LIST_ABBREV)) {
+		} else if(command.equalsIgnoreCase(COMMAND_LIST) || command.equalsIgnoreCase(COMMAND_LIST_ABBREV)) {
 			return executeList(fieldLine, feedback);
-		}
-		else {
+		} else if(command.equalsIgnoreCase(COMMAND_SORT) || command.equalsIgnoreCase(COMMAND_SORT_ABBREV)) {
+			return executeSort(fieldLine, feedback);
+		} else if(command.equalsIgnoreCase(COMMAND_FIND) || command.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
+			return executeFind(fieldLine, feedback);
+		} else {
 			feedback.append(MESSAGE_INVALID_COMMAND);
-			return null;
+			return _workingList;
 		}
 	}
 
@@ -93,7 +102,9 @@ public class QLLogic {
 		_workingList = new LinkedList<Task>();
 	}
 
-	/** Multi-command methods **/ 	
+	/** Multi-command methods **/ 
+	
+	/* CommandProcessor Class start */
 	private static String[] splitCommandAndFields(String instruction) {
 		String[] splittedInstruction = instruction.split(STRING_BLANK_SPACE, NUM_SPLIT_TWO);
 		if(splittedInstruction.length == 1) {
@@ -180,7 +191,18 @@ public class QLLogic {
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-
+	
+	private static boolean isValidYesNo(String yesNoString, StringBuilder feedback) {
+		if(yesNoString.equalsIgnoreCase(STRING_YES) || yesNoString.equalsIgnoreCase(STRING_NO)) {
+			return true;
+		}
+		else {
+			feedback.append(MESSAGE_INVALID_YES_NO);
+			return false;
+		}
+	}
+	/* CommandProcessor Class end */
+	
 	private static <E> boolean isDuplicated(LinkedList<E> list, E e) {
 		
 		if(list == null) {
@@ -195,16 +217,7 @@ public class QLLogic {
 		return false;
 	}
 
-	private static boolean isValidYesNo(String yesNoString, StringBuilder feedback) {
-		if(yesNoString.equalsIgnoreCase(STRING_YES) || yesNoString.equalsIgnoreCase(STRING_NO)) {
-			return true;
-		}
-		else {
-			feedback.append(MESSAGE_INVALID_YES_NO);
-			return false;
-		}
-	}
-	
+
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
 		char fieldType = field.charAt(INDEX_FIELD_TYPE);
@@ -224,7 +237,7 @@ public class QLLogic {
 			break;
 				
 		default: 
-			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append("\n");
+			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append(STRING_NEW_LINE);
 			break;
 		}
 	}
@@ -434,7 +447,7 @@ public class QLLogic {
 			break;
 				
 		default: 
-			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append("\n");
+			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append(STRING_NEW_LINE);
 			break;
 		}
 	}
@@ -455,7 +468,6 @@ public class QLLogic {
 		for(int i = 0; i < _workingList.size(); i++) {
 			if(!_workingList.get(i).getIsDue()) {
 				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					System.out.println(_workingList.get(i).getName() + "added to buffer");
 					bufferList.add(i);
 				}
 			} 
@@ -468,7 +480,6 @@ public class QLLogic {
 		for(int i = 0; i < _workingList.size(); i++) {
 			if(_workingList.get(i).getIsDue()) {
 				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					System.out.println(_workingList.get(i).getName() + "added to buffer");
 					bufferList.add(i);
 				}
 			} 
@@ -607,18 +618,164 @@ public class QLLogic {
 		copyList(bufferList, taskIndexesSatisfyCriteria);
 	}
 	
+	/** Sort methods **/
+	private static LinkedList<Task> executeSort(String fieldLine, StringBuilder feedback) {
+		LinkedList<String> fields = processFieldLine(fieldLine);
+		if(fields.size() == 0) {
+			feedback.append("No field entered.");
+			return _workingList;
+		}	
+		LinkedList<char[]> sortingCriteria = getSortingCriteria(fields);
+		sortByCriteria(sortingCriteria, feedback);
+		return _workingList;
+		
+	}
+	
+	private static void sortByCriteria(LinkedList<char[]> sortingCriteria, StringBuilder feedback) {
+		for(int i = sortingCriteria.size() - 1; i >= 0; i--) {
+			char criterionType = sortingCriteria.get(i)[0];
+			char criterionOrder = sortingCriteria.get(i)[1];
+			switch(criterionType) {
+			case 'd':
+				sortByDate(criterionOrder, feedback);
+				break;
+				
+			case 'p':
+				sortByPriority(criterionOrder,feedback);
+				break;
+				
+			default:
+				feedback.append(String.format(MESSAGE_INVALID_SORTING_CRITERIA_TYPE, criterionType)).append(STRING_NEW_LINE);
+				break;
+			}
+		}
+	}
+
+	private static LinkedList<char[]> getSortingCriteria(LinkedList<String> fields) {
+		LinkedList<char[]> sortingCriteria = new LinkedList<char[]>();
+		for(int i = 0; i < fields.size(); i++) {
+			String criterion = fields.get(i);
+			char criterionType = criterion.charAt(INDEX_FIELD_TYPE);
+			String criterionOrderString = criterion.substring(INDEX_FIELD_CONTENT_START).trim();
+			char criteriaOrder = criterionOrderString.charAt(0);
+			sortingCriteria.add(new char[]{criterionType, criteriaOrder});
+		}
+		return sortingCriteria;
+	}
+
+	private static void sortByPriority(char order, StringBuilder feedback) {
+		for(int i = _workingList.size() - 1; i >= 0; i--) {
+			for(int j = 0; j < i; j++) {
+				Task taskLeft = _workingList.get(j);
+				Task taskRight = _workingList.get(j + 1);
+				switch (order) {
+				case 'a':
+					if(taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+					}
+					break;
+				
+				case 'd':
+					if(taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+					}
+					break;
+				default:
+					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
+					return;
+				}
+			}
+		}
+	}
+	
+	private static void sortByDate(char order, StringBuilder feedback) {
+		for(int i = _workingList.size() - 1; i >= 0; i--) {
+			for(int j = 0; j < i; j++) {
+				Task taskLeft = _workingList.get(j);
+				Task taskRight = _workingList.get(j + 1);
+				switch (order) {
+				case CHAR_ASCENDING:
+					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) > 0 ) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+					}
+					break;
+				
+				case CHAR_DESCENDING:
+					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) < 0) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+					}
+					break;
+					
+				default:
+					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
+					return;
+				}
+			}
+		}
+	}
+
+	/** Find method **/
+	private static LinkedList<Task> executeFind(String fieldLine, StringBuilder feedback) {
+		if(fieldLine.equals(STRING_NO_CHAR)) {
+			return _workingList;
+		}
+		String keywords[] = fieldLine.split(STRING_BLANK_SPACE);
+		findTasks(keywords, feedback);
+		return _workingList;
+	}
+	
+	private static void findTasks(String[] keywords, StringBuilder feedback) {
+		LinkedList<Task> foundTasks = new LinkedList<Task>();
+		for(int i = 0; i < keywords.length; i++) {
+			String currentKeyword = keywords[i];
+			for(int j = 0; j < _workingList.size(); j++) {
+				Task currentTask = _workingList.get(j);
+				if(containsKeyword(currentTask, currentKeyword)){
+					if(!foundTasks.contains(currentTask)) {
+						foundTasks.add(currentTask);
+					}
+				}
+			}
+		}
+		if(foundTasks.isEmpty()) {
+			feedback.append(MESSAGE_NO_TASK_MATCHES_KEYWORD);
+			return;
+		}
+		_workingList = foundTasks;
+	}
+
+	private static boolean containsKeyword(Task currentTask, String currentKeyword) {
+		if(currentTask.getName().contains(currentKeyword)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/** Main method **/
 	public static void main(String args[]) {
 		_workingList = new LinkedList<Task>();
 		StringBuilder feedback =  new StringBuilder();
 		
-		executeCommand("add task one -p L -d 0102", feedback);
-		executeCommand("add task two  -d 0502 -p M", feedback);
+		executeCommand("add task one -p L -d 1502", feedback);
+		executeCommand("add task two  -d 1502 -p M", feedback);
 		executeCommand("add task three -d 0902 -p H", feedback);
-		executeCommand("add task four -d 0702 -p M", feedback);
-		executeCommand("list -o N", feedback);
+		executeCommand("add task foura -d 1502 -p L", feedback);
+		executeCommand("add task fourb -d 0902 -p L", feedback);
+		executeCommand("add task five -d 0902 -p L", feedback);
 		
-		System.out.println(_workingList.peek().getName());
+		executeCommand("f tasks", feedback);
+		executeCommand("s -d d", feedback);
+		
+		System.out.println(feedback.toString());
+		
+		for(int i = 0; i < _workingList.size(); i++) {
+			System.out.println(_workingList.get(i).getName());
+		}
 	}
 	
 }

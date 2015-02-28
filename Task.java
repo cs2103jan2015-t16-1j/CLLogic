@@ -3,8 +3,12 @@ import java.util.GregorianCalendar;
 
 public class Task {
 	
+	private static final char CHAR_PRIORITY_HIGH = 'H';
+	private static final char CHAR_PRIORITY_MEDIUM = 'M';
+	private static final char CHAR_PRIORITY_LOW = 'L';
 	private static final char CHAR_NO_PRIORITY_LEVEL = 'N';
-	private static final int CALENDAR_MONTH_OFFSET = -1;
+	
+	private static final int OFFSET_CALENDAR_MONTH = -1;
 	
 	private static final int NUM_0_SEC = 0;
 	private static final int NUM_0_MIN = 0;
@@ -12,6 +16,9 @@ public class Task {
 	private static final int NUM_59_SEC = 59;
 	private static final int NUM_59_MIN = 59;
 	private static final int NUM_23_HOUR = 23;
+	private static final int NUM_PRIORITY_HIGH = 3;
+	private static final int NUM_PRIORITY_MEDIUM = 2;
+	private static final int NUM_PRIORITY_LOW = 1;
 	
 	private String _name; 
 	private String _description;
@@ -42,18 +49,17 @@ public class Task {
 	public void setPriority(char priority) {
 		switch (priority) {
 		case 'L': 
-			_priority = 'L';
+			_priority = CHAR_PRIORITY_LOW;
 			break;
 		case 'M': 
-			_priority = 'M';
+			_priority = CHAR_PRIORITY_MEDIUM;
 			break;
 		case 'H': 
-			_priority = 'H';
+			_priority = CHAR_PRIORITY_HIGH;
 			break;
 		default: 
 			break;
 		}
-		
 	}
 	
 	public void setStartDate (String startDateString) {
@@ -63,7 +69,7 @@ public class Task {
 		int startMonth = DateHandler.decodeMonthFromDate(startDateInt);
 		int startYear = DateHandler.decodeYearFromDate(startDateInt);
 		
-		_startDate = new GregorianCalendar(startYear, startMonth + CALENDAR_MONTH_OFFSET, startDay, NUM_0_HOUR, NUM_0_MIN, NUM_0_SEC);
+		_startDate = new GregorianCalendar(startYear, startMonth + OFFSET_CALENDAR_MONTH, startDay, NUM_0_HOUR, NUM_0_MIN, NUM_0_SEC);
 	}
 	
 	public void setDueDate (String dueDateString) {
@@ -73,7 +79,7 @@ public class Task {
 		int dueMonth = DateHandler.decodeMonthFromDate(dueDateInt);
 		int dueYear = DateHandler.decodeYearFromDate(dueDateInt);
 		
-		_dueDate = new GregorianCalendar(dueYear, dueMonth + CALENDAR_MONTH_OFFSET, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
+		_dueDate = new GregorianCalendar(dueYear, dueMonth + OFFSET_CALENDAR_MONTH, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
 		
 		updateIsDue();
 	}
@@ -117,6 +123,19 @@ public class Task {
 		return _priority;
 	}
 	
+	public int getPriorityInt() {
+		switch(_priority) {
+		case 'L':
+			return NUM_PRIORITY_LOW;
+		case 'M':
+			return NUM_PRIORITY_MEDIUM;
+		case 'H':
+			return NUM_PRIORITY_HIGH;
+		default:
+			return 0;
+		}
+	}
+	
 	public Calendar getStartDate() {
 		return _startDate;
 	}
@@ -127,7 +146,7 @@ public class Task {
 	
 	public String getStartDateString() {
 		int day = _startDate.get(Calendar.DAY_OF_MONTH);
-		int month = _startDate.get(Calendar.MONTH) - CALENDAR_MONTH_OFFSET;
+		int month = _startDate.get(Calendar.MONTH) - OFFSET_CALENDAR_MONTH;
 		int year = _startDate.get(Calendar.YEAR);
 		String dateString;
 		if(month < 10) {
@@ -141,7 +160,7 @@ public class Task {
 	
 	public String getDueDateString() {
 		int day = _dueDate.get(Calendar.DAY_OF_MONTH);
-		int month = _dueDate.get(Calendar.MONTH) - CALENDAR_MONTH_OFFSET;
+		int month = _dueDate.get(Calendar.MONTH) - OFFSET_CALENDAR_MONTH;
 		int year = _dueDate.get(Calendar.YEAR);
 		String dateString;
 		if(month < 10) {
