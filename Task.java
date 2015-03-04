@@ -63,21 +63,21 @@ public class Task {
 	}
 	
 	public void setStartDate (String startDateString) {
-		int startDateInt = DateHandler.changeFromDateStringToDDMMYYYY(startDateString);
+		int startDateInt = DateHandler.changeFromDateStringToDateInt(startDateString);
 		
-		int startDay = DateHandler.decodeDayFromDate(startDateInt);
-		int startMonth = DateHandler.decodeMonthFromDate(startDateInt);
-		int startYear = DateHandler.decodeYearFromDate(startDateInt);
+		int startDay = DateHandler.decodeDayFromDateInt(startDateInt);
+		int startMonth = DateHandler.decodeMonthFromDateInt(startDateInt);
+		int startYear = DateHandler.decodeYearFromDateInt(startDateInt);
 		
 		_startDate = new GregorianCalendar(startYear, startMonth + OFFSET_CALENDAR_MONTH, startDay, NUM_0_HOUR, NUM_0_MIN, NUM_0_SEC);
 	}
 	
 	public void setDueDate (String dueDateString) {
-		int dueDateInt = DateHandler.changeFromDateStringToDDMMYYYY(dueDateString);
+		int dueDateInt = DateHandler.changeFromDateStringToDateInt(dueDateString);
 		
-		int dueDay = DateHandler.decodeDayFromDate(dueDateInt);
-		int dueMonth = DateHandler.decodeMonthFromDate(dueDateInt);
-		int dueYear = DateHandler.decodeYearFromDate(dueDateInt);
+		int dueDay = DateHandler.decodeDayFromDateInt(dueDateInt);
+		int dueMonth = DateHandler.decodeMonthFromDateInt(dueDateInt);
+		int dueYear = DateHandler.decodeYearFromDateInt(dueDateInt);
 		
 		_dueDate = new GregorianCalendar(dueYear, dueMonth + OFFSET_CALENDAR_MONTH, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
 		

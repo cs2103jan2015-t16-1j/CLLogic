@@ -10,11 +10,11 @@ public class DateHandler {
 	
 	private static final int OFFSET_CALENDAR_MONTH_FIELD = -1;
 	
-	public static int decodeYearFromDate(int date) {
+	public static int decodeYearFromDateInt(int date) {
 		return date%10000;
 	}
 	
-	public static int decodeMonthFromDate(int date) {
+	public static int decodeMonthFromDateInt(int date) {
 		int month = (date%1000000)/10000;
 		if(month/10 == 0) {
 			month = month%10;
@@ -22,12 +22,12 @@ public class DateHandler {
 		return month;
 	}
 
-	public static int decodeDayFromDate(int date) {
+	public static int decodeDayFromDateInt(int date) {
 		int day = date/1000000;
 		return day;
 	}
 	
-	public static int changeFromDateStringToDDMMYYYY(String dateString) {
+	public static int changeFromDateStringToDateInt(String dateString) {
 		if(dateString.charAt(0) == '0') {
 			dateString = dateString.replaceFirst("0", "");
 		}
@@ -51,11 +51,11 @@ public class DateHandler {
 			}
 		}
 		
-		int dateInt = formatToDDMMYYYY(Integer.valueOf(dateString));
+		int dateInt = formatDateIntToDDMMYYYY(Integer.valueOf(dateString));
 		return dateInt;
 	}
 	
-	public static int formatToDDMMYYYY(int dateInt) {
+	public static int formatDateIntToDDMMYYYY(int dateInt) {
 		if(String.valueOf(dateInt).length() == 8 || String.valueOf(dateInt).length() == 7) {
 			return dateInt;
 		} 
@@ -84,9 +84,9 @@ public class DateHandler {
 		}
 		
 		try {
-			int dateInt = DateHandler.changeFromDateStringToDDMMYYYY(dateString);
-			int day = DateHandler.decodeDayFromDate(dateInt); 
-			int month = DateHandler.decodeMonthFromDate(dateInt);
+			int dateInt = DateHandler.changeFromDateStringToDateInt(dateString);
+			int day = DateHandler.decodeDayFromDateInt(dateInt); 
+			int month = DateHandler.decodeMonthFromDateInt(dateInt);
 
 			if(day > 31) {
 				feedback.append(MESSAGE_INVALID_DAY);
@@ -104,15 +104,15 @@ public class DateHandler {
 		return true;
 	}
 	
-	public static Calendar getDateCalendar(String dateString, StringBuilder feedback) {
+	public static Calendar changeFromDateStringToDateCalendar(String dateString, StringBuilder feedback) {
 		if(!DateHandler.isValidDateFormat(dateString, feedback)) {
 			return null;
 		} 
 		else {
-			int dateInt = DateHandler.changeFromDateStringToDDMMYYYY(dateString);
-			int dayInt = DateHandler.decodeDayFromDate(dateInt);
-			int monthInt = DateHandler.decodeMonthFromDate(dateInt);
-			int yearInt = DateHandler.decodeYearFromDate(dateInt);
+			int dateInt = DateHandler.changeFromDateStringToDateInt(dateString);
+			int dayInt = DateHandler.decodeDayFromDateInt(dateInt);
+			int monthInt = DateHandler.decodeMonthFromDateInt(dateInt);
+			int yearInt = DateHandler.decodeYearFromDateInt(dateInt);
 			return (Calendar) new GregorianCalendar(yearInt, monthInt + OFFSET_CALENDAR_MONTH_FIELD, dayInt);
 		}
 	}

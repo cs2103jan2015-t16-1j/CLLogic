@@ -563,11 +563,11 @@ public class QLLogic {
 	}
 
 	private static void matchDueDateRangeCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String[] dueDateCriteriaArray, StringBuilder feedback, boolean isFirstPass) {
-		Calendar startDate = DateHandler.getDateCalendar(dueDateCriteriaArray[0], feedback);
+		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteriaArray[0], feedback);
 		if(startDate == null) {
 			return;
 		}
-		Calendar endDate = DateHandler.getDateCalendar(dueDateCriteriaArray[1], feedback);
+		Calendar endDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteriaArray[1], feedback);
 		if(endDate == null) {
 			return;
 		}
@@ -601,7 +601,7 @@ public class QLLogic {
 			return;
 		}
 		
-		String dueDateCriteriaString = String.valueOf(DateHandler.changeFromDateStringToDDMMYYYY(dueDateCriteria));
+		String dueDateCriteriaString = String.valueOf(DateHandler.changeFromDateStringToDateInt(dueDateCriteria));
 		
 		LinkedList<Integer> bufferList = new LinkedList<Integer>();
 		for(int i = 0; i < _workingList.size(); i++) {
@@ -665,6 +665,7 @@ public class QLLogic {
 
 	private static void sortByPriority(char order, StringBuilder feedback) {
 		for(int i = _workingList.size() - 1; i >= 0; i--) {
+			boolean isSorted = true;
 			for(int j = 0; j < i; j++) {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
@@ -673,6 +674,7 @@ public class QLLogic {
 					if(taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
+						isSorted = false;
 					}
 					break;
 				
@@ -680,6 +682,7 @@ public class QLLogic {
 					if(taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
+						isSorted = false;
 					}
 					break;
 				default:
@@ -687,11 +690,15 @@ public class QLLogic {
 					return;
 				}
 			}
+			if(isSorted) {
+				return;
+			}
 		}
 	}
 	
 	private static void sortByDate(char order, StringBuilder feedback) {
 		for(int i = _workingList.size() - 1; i >= 0; i--) {
+			boolean isSorted = true;
 			for(int j = 0; j < i; j++) {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
@@ -700,6 +707,7 @@ public class QLLogic {
 					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) > 0 ) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
+						isSorted = false;
 					}
 					break;
 				
@@ -707,6 +715,7 @@ public class QLLogic {
 					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) < 0) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
+						isSorted = false;
 					}
 					break;
 					
@@ -714,6 +723,9 @@ public class QLLogic {
 					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
 					return;
 				}
+			}
+			if(isSorted) {
+				return;
 			}
 		}
 	}
@@ -729,23 +741,49 @@ public class QLLogic {
 	}
 	
 	private static void findTasks(String[] keywords, StringBuilder feedback) {
-		LinkedList<Task> foundTasks = new LinkedList<Task>();
-		for(int i = 0; i < keywords.length; i++) {
-			String currentKeyword = keywords[i];
-			for(int j = 0; j < _workingList.size(); j++) {
-				Task currentTask = _workingList.get(j);
+		LinkedList<Object[]> foundTasksWithFoundCount = new LinkedList<Object[]>();
+		for(int i = 0; i < _workingList.size(); i++) {
+			Task currentTask = _workingList.get(i);
+			int foundCount = 0;
+			for(int j = 0; j < keywords.length; j++) {
+				String currentKeyword = keywords[j];
 				if(containsKeyword(currentTask, currentKeyword)){
-					if(!foundTasks.contains(currentTask)) {
-						foundTasks.add(currentTask);
-					}
+					foundCount++;
 				}
 			}
+			if(foundCount != 0) {
+				foundTasksWithFoundCount.add(new Object[]{currentTask, Integer.valueOf(foundCount)});
+			}
 		}
-		if(foundTasks.isEmpty()) {
+		if(foundTasksWithFoundCount.isEmpty()) {
 			feedback.append(MESSAGE_NO_TASK_MATCHES_KEYWORD);
 			return;
 		}
-		_workingList = foundTasks;
+		_workingList = sortFoundTasksByFoundCount(foundTasksWithFoundCount);
+	}
+
+	private static LinkedList<Task> sortFoundTasksByFoundCount(LinkedList<Object[]> foundTasksWithFoundCount) {
+		for(int i = foundTasksWithFoundCount.size() - 1; i >= 0; i--) {
+			boolean isSorted = true;
+			for(int j = 0; j < i; j++) {
+				Object[] taskWithCountLeft = foundTasksWithFoundCount.get(j);
+				Object[] taskWithCountRight = foundTasksWithFoundCount.get(j + 1);
+				if((int)taskWithCountLeft[1] < (int)taskWithCountRight[1]) {
+					foundTasksWithFoundCount.set(j + 1, taskWithCountLeft);
+					foundTasksWithFoundCount.set(j, taskWithCountRight);
+					isSorted = false;
+				}
+			}
+			if(isSorted) {
+				break;
+			}
+		}
+		LinkedList<Task> newWorkingList = new LinkedList<Task>();
+		for(int i = 0; i < foundTasksWithFoundCount.size(); i++) {
+			Task taskToAdd = (Task)foundTasksWithFoundCount.get(i)[0];
+			newWorkingList.add(taskToAdd);
+		}
+		return newWorkingList;
 	}
 
 	private static boolean containsKeyword(Task currentTask, String currentKeyword) {
@@ -766,10 +804,9 @@ public class QLLogic {
 		executeCommand("add task three -d 0902 -p H", feedback);
 		executeCommand("add task foura -d 1502 -p L", feedback);
 		executeCommand("add task fourb -d 0902 -p L", feedback);
-		executeCommand("add task five -d 0902 -p L", feedback);
+		executeCommand("add task one five -d 0902 -p L", feedback);
 		
-		executeCommand("f tasks", feedback);
-		executeCommand("s -d d", feedback);
+		executeCommand("f task five one", feedback);
 		
 		System.out.println(feedback.toString());
 		
