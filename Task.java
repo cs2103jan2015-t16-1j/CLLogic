@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -145,31 +146,13 @@ public class Task {
 	}
 	
 	public String getStartDateString() {
-		int day = _startDate.get(Calendar.DAY_OF_MONTH);
-		int month = _startDate.get(Calendar.MONTH) - OFFSET_CALENDAR_MONTH;
-		int year = _startDate.get(Calendar.YEAR);
-		String dateString;
-		if(month < 10) {
-			dateString = String.valueOf(day) + "0" + String.valueOf(month) + String.valueOf(year);
-		}
-		else {
-			dateString = String.valueOf(day) + String.valueOf(month) + String.valueOf(year);
-		}
-		return dateString;
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(_startDate);
 	}
 	
 	public String getDueDateString() {
-		int day = _dueDate.get(Calendar.DAY_OF_MONTH);
-		int month = _dueDate.get(Calendar.MONTH) - OFFSET_CALENDAR_MONTH;
-		int year = _dueDate.get(Calendar.YEAR);
-		String dateString;
-		if(month < 10) {
-			dateString = String.valueOf(day) + "0" + String.valueOf(month) + String.valueOf(year);
-		}
-		else {
-			dateString = String.valueOf(day) + String.valueOf(month) + String.valueOf(year);
-		}
-		return dateString;
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(_dueDate);
 	}
 	
 	public boolean getIsCompleted() {

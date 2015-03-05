@@ -215,7 +215,7 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
 		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
-		QLLogic.executeCommand("add task two  -d 2502 -p M", feedback);
+		QLLogic.executeCommand("add task two  -d TDY -p M", feedback);
 		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
 		testList = QLLogic.executeCommand("list -d TDY", feedback);
 		assertEquals(testList.get(0).getName(), "task two");
@@ -329,8 +329,8 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
 		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
-		QLLogic.executeCommand("add task two  -d 2802 -p M", feedback);
-		QLLogic.executeCommand("add task three -d 2502 -p H", feedback);
+		QLLogic.executeCommand("add task two  -d 2803 -p M", feedback);
+		QLLogic.executeCommand("add task three -d 2503 -p H", feedback);
 		QLLogic.executeCommand("add task four -d 0902 -p M", feedback);
 		testList = QLLogic.executeCommand("list -o Y", feedback);
 		assertEquals(testList.get(0).getName(), "task one");
@@ -351,10 +351,7 @@ public class QLLogicTest {
 		testList = QLLogic.executeCommand("list -d 2502", feedback);
 		assertEquals(testList.get(0).getName(), "task three");
 		testList = QLLogic.executeCommand("list", feedback);
-		assertEquals(testList.get(0).getName(), "task one");
-		assertEquals(testList.get(3).getName(), "task four");
-
-		
+		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
 		
 	}
 	

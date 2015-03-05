@@ -3,8 +3,6 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
-
-
 	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
 	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
 	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
@@ -597,19 +595,21 @@ public class QLLogic {
 	}
 
 	private static void matchSingleDueDateCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String dueDateCriteria, StringBuilder feedback, boolean isFirstPass) {
-		if(!DateHandler.isValidDateFormat(dueDateCriteria, feedback)) {
+		Calendar dueDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteria, feedback);
+		if(dueDate == null) {
 			return;
 		}
-		
-		String dueDateCriteriaString = String.valueOf(DateHandler.changeFromDateStringToDateInt(dueDateCriteria));
+		dueDate.set(Calendar.HOUR, NUM_23_HOUR);
+		dueDate.set(Calendar.MINUTE, NUM_59_MIN);
+		dueDate.set(Calendar.SECOND, NUM_59_SEC);
 		
 		LinkedList<Integer> bufferList = new LinkedList<Integer>();
 		for(int i = 0; i < _workingList.size(); i++) {
-			String taskDueDateString = _workingList.get(i).getDueDateString();
-			if(taskDueDateString == null) {
+			Calendar taskDueDate = _workingList.get(i).getDueDate();
+			if(taskDueDate == null) {
 				return;
 			}
-			if(taskDueDateString.equals(dueDateCriteriaString)) {
+			if(taskDueDate.equals(dueDate)) {
 				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
 					bufferList.add(i);
 				}
