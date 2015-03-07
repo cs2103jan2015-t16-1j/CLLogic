@@ -1,4 +1,5 @@
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class QLLogic {
@@ -6,15 +7,10 @@ public class QLLogic {
 	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
 	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
 	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
-	private static final String MESSAGE_INVALID_YES_NO = "Invalid yes/no field. Please use Y for yes and N for no.";
-	private static final String MESSAGE_NO_TASK_SATISFY_CRITERIA = "No task satisfies criteria entered.";
 	private static final String MESSAGE_NO_DATE_ENTERED = "No date entered.";
-	private static final String MESSAGE_INVALID_PRIORITY_LEVEL = "Invalid priority level.";
 	private static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\".";
 	private static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed.";
 	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed.";
-	private static final String MESSAGE_TASK_NUMBER_OUT_OF_RANGE = "Task number entered out of range. Nothing is executed.";
-	private static final String MESSAGE_INVALID_TASK_NUMBER = "Invalid task number entered. Nothing is executed.";
 	
 	private static final int INDEX_COMMAND = 0;
 	private static final int INDEX_FIELDS = 1;
@@ -22,7 +18,6 @@ public class QLLogic {
 	private static final int INDEX_FIELD_TYPE = 0;
 	private static final int INDEX_PRIORITY_LEVEL = 0;
 	
-	private static final int NUM_SPLIT_TWO = 2;
 	private static final int NUM_0_SEC = 0;
 	private static final int NUM_0_MIN = 0;
 	private static final int NUM_0_HOUR = 0;
@@ -49,12 +44,10 @@ public class QLLogic {
 	
 	private static final String STRING_NO_CHAR = "";
 	private static final String STRING_BLANK_SPACE = " ";
-	private static final String STRING_DASH = "-";
 	private static final String STRING_NO = "N";
 	private static final String STRING_YES = "Y";
 	private static final String STRING_NEW_LINE = "\n";
 	
-	private static final char CHAR_NO_PRIORITY_LEVEL = 'N';
 	private static final char CHAR_DESCENDING = 'd';
 	private static final char CHAR_ASCENDING = 'a';
 
@@ -71,6 +64,10 @@ public class QLLogic {
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
 		return _workingList;
+	}
+	
+	private static void recover() {
+		copyList(_workingListMaster, _workingList);
 	}
 	
 	// Stub
@@ -96,6 +93,7 @@ public class QLLogic {
 			System.out.println();
 		}
 		
+		/*
 		System.out.println("	workingListMaster: ");
 		for(int i = 0; i < _workingListMaster.size(); i++) {
 			System.out.print(_workingListMaster.get(i).getName() + " ");
@@ -107,6 +105,7 @@ public class QLLogic {
 			} catch(NullPointerException e) {}
 			System.out.println();
 		}
+		*/
 		System.out.println();
 		feedback.setLength(0);
 	}
@@ -137,6 +136,7 @@ public class QLLogic {
 		}
 	}
 
+	/** Multi-command methods **/ 
 	//TODO change to private
 	public static void clearWorkingList() {
 		_workingList = new LinkedList<Task>();
@@ -147,22 +147,7 @@ public class QLLogic {
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-
-	/** Multi-command methods **/ 
-	private static <E> boolean isDuplicated(LinkedList<E> list, E e) {
-		
-		if(list == null) {
-			return false;
-		}
-		
-		for(int i = 0; i < list.size(); i++) {
-			if(list.get(i).equals(e)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
+	
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
 		char fieldType = field.charAt(INDEX_FIELD_TYPE);
@@ -311,60 +296,39 @@ public class QLLogic {
 	/** List methods **/
 	private static LinkedList<Task> executeList(String fieldLine, StringBuilder feedback) {
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
-		LinkedList<Integer> taskIndexesSatisfyCriteria = new LinkedList<Integer>(); 
-		boolean isFirstPass;
-		
-		for(int i = 0; i < fields.size(); i++) {
-			if(i == 0) {
-				isFirstPass = true;
-			}
-			else {
-				isFirstPass = false;
-			}
-			updateTaskIndexesSatisfyCriteria(taskIndexesSatisfyCriteria, fields.get(i), feedback, isFirstPass);
+		LinkedList<Task> workingListBackUp = new LinkedList<Task>();
+		copyList(_workingList, workingListBackUp);
+ 		for(int i = 0; i < fields.size(); i++) {
+			filterWorkingListByCriteria(fields.get(i), feedback);
 		}
-		
-		if(taskIndexesSatisfyCriteria.isEmpty()) {
-			feedback.append(MESSAGE_NO_TASK_SATISFY_CRITERIA);
-		} else {
-			filterWorkingList(taskIndexesSatisfyCriteria);
-		}
+		if(_workingList.isEmpty() || fields.isEmpty()) {
+ 			feedback.append("No matches found for criteria entered.");
+ 			_workingList = workingListBackUp;
+ 		}
 		return _workingList;
 	}
-	
-	private static void filterWorkingList(LinkedList<Integer> requiredIndexes) {
-		LinkedList<Task> bufferList = new LinkedList<Task>(); 
-		for(int i = 0; i < requiredIndexes.size(); i++) {
-			int requiredIndex = requiredIndexes.get(i);
-			Task requiredTask = _workingList.get(requiredIndex);
-			bufferList.add(requiredTask);
-		}
-		_workingList = bufferList;
-	}
 
-	private static void updateTaskIndexesSatisfyCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String field, StringBuilder feedback, boolean isFirstPass) {
+	private static void filterWorkingListByCriteria(String field, StringBuilder feedback) {
 		if(field.equals(STRING_BLANK_SPACE)) {
 			return;
 		}
-		
 		char fieldType = field.charAt(INDEX_FIELD_TYPE);
 		String fieldCriteria = field.substring(INDEX_FIELD_CONTENT_START).trim();
-				
 		switch(fieldType) {
 		case 'd':		
-			findIndexesMatchDueDateCriteria(taskIndexesSatisfyCriteria, fieldCriteria, feedback, isFirstPass);
+			filterByDueDate(fieldCriteria, feedback);
 			break;
 			
 		case 'p':
-			findIndexesMatchPriority(taskIndexesSatisfyCriteria, fieldCriteria, feedback, isFirstPass);
+			filterByPriority(fieldCriteria, feedback);
 			break;
 				
 		case 'c':
-			findIndexesMatchCompleteStatus(taskIndexesSatisfyCriteria, fieldCriteria, feedback, isFirstPass);
+			filterByCompleteStatus(fieldCriteria, feedback);
 			break;
 			
 		case 'o':
-			findIndexesMatchDueStatus(taskIndexesSatisfyCriteria, fieldCriteria, feedback, isFirstPass);
+			filterByOverdueStatus(fieldCriteria, feedback);
 			break;
 				
 		default: 
@@ -373,126 +337,71 @@ public class QLLogic {
 		}
 	}
 
-	private static void findIndexesMatchDueStatus(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
+	private static void filterByOverdueStatus(String fieldCriteria, StringBuilder feedback) {
 		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
-			if(fieldCriteria.equals(STRING_YES)) {
-				matchDueYes(taskIndexesSatisfyCriteria, feedback, isFirstPass);
+			LinkedList<Task> bufferList = new LinkedList<Task>();
+			for(int i = 0; i < _workingList.size(); i++) {
+				Task currentTask = _workingList.get(i);
+				if((currentTask.getIsDue() && fieldCriteria.equals(STRING_YES))
+						|| (!currentTask.getIsDue() && fieldCriteria.equals(STRING_NO))) {
+					bufferList.add(currentTask);
+				} 
 			}
-			if(fieldCriteria.equals(STRING_NO)) {
-				matchDueNo(taskIndexesSatisfyCriteria, feedback, isFirstPass);
-			}	
+			copyList(bufferList, _workingList);
 		}
-	}
-
-	private static void matchDueNo(LinkedList<Integer> taskIndexesSatisfyCriteria, StringBuilder feedback, boolean isFirstPass) {
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			if(!_workingList.get(i).getIsDue()) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
-			} 
-		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
-	}
-
-	private static void matchDueYes(LinkedList<Integer> taskIndexesSatisfyCriteria, StringBuilder feedback, boolean isFirstPass) {
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			if(_workingList.get(i).getIsDue()) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
-			} 
-		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
-		
 	}
 	
-	private static void findIndexesMatchCompleteStatus(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
+	private static void filterByCompleteStatus(String fieldCriteria, StringBuilder feedback) {
 		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
-			if(fieldCriteria.equalsIgnoreCase(STRING_YES)) {
-				matchCompleteYes(taskIndexesSatisfyCriteria, feedback, isFirstPass);
+			LinkedList<Task> bufferList = new LinkedList<Task>();
+			for(int i = 0; i < _workingList.size(); i++) {
+				Task currentTask = _workingList.get(i);
+				if((currentTask.getIsCompleted() && fieldCriteria.equals(STRING_YES))
+						|| (!currentTask.getIsCompleted() && fieldCriteria.equals(STRING_NO))) {
+					bufferList.add(currentTask);
+				} 
 			}
-			if(fieldCriteria.equalsIgnoreCase(STRING_NO)) {
-				matchCompleteNo(taskIndexesSatisfyCriteria, feedback, isFirstPass);
-			}	
+			copyList(bufferList, _workingList);
 		}
 	}
-
-	private static void matchCompleteNo(LinkedList<Integer> taskIndexesSatisfyCriteria, StringBuilder feedback, boolean isFirstPass) {
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			if(!_workingList.get(i).getIsCompleted()) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
-			} 
-		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
-	}
-
-	private static void matchCompleteYes(LinkedList<Integer> taskIndexesSatisfyCriteria, StringBuilder feedback, boolean isFirstPass) {
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			if(_workingList.get(i).getIsCompleted()) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
-			} 
-		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
-		
-	}
-
-	private static void findIndexesMatchPriority(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
+	
+	private static void filterByPriority(String fieldCriteria, StringBuilder feedback) {
 		if(CommandParser.isValidPriorityLevel(fieldCriteria, feedback)) {
 			char priorityLevel = fieldCriteria.charAt(INDEX_PRIORITY_LEVEL);
-			matchPriorityLevelCriteria(taskIndexesSatisfyCriteria, priorityLevel, feedback, isFirstPass);
-		}
-		
-	}
-
-	private static void matchPriorityLevelCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, char priorityLevel, StringBuilder feedback, boolean isFirstPass) {
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			char taskPriorityLevel = _workingList.get(i).getPriority();
-			if(taskPriorityLevel == CHAR_NO_PRIORITY_LEVEL) {
-				return;
+			LinkedList<Task> bufferList = new LinkedList<Task>();
+			for(int i = 0; i < _workingList.size(); i++) {
+				Task currentTask = _workingList.get(i);
+				if(currentTask.getPriority() == priorityLevel) {
+					bufferList.add(currentTask);
+				} 
 			}
-			if(taskPriorityLevel == priorityLevel) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
-			} 
+			copyList(bufferList, _workingList);
 		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
 	}
 
-	private static void findIndexesMatchDueDateCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String dueDateCriteria, StringBuilder feedback, boolean isFirstPass) {
-		if(dueDateCriteria.equals(STRING_NO_CHAR)) {
+	private static void filterByDueDate(String fieldCriteria, StringBuilder feedback) {
+		if(fieldCriteria.equals(STRING_NO_CHAR)) {
 			feedback.append(MESSAGE_NO_DATE_ENTERED);
 			return;
 		}
-		String[] dueDateCriteriaArray = dueDateCriteria.split(":");
+		String[] dueDateCriteriaArray = fieldCriteria.split(":");
 		if(dueDateCriteriaArray.length == 1) {
-			matchSingleDueDateCriteria(taskIndexesSatisfyCriteria, dueDateCriteriaArray[0], feedback, isFirstPass);		
+			filterBySingleDate(dueDateCriteriaArray[0], feedback);		
 		} 
 		else if(dueDateCriteriaArray.length == 2) {
-			matchDueDateRangeCriteria(taskIndexesSatisfyCriteria, dueDateCriteriaArray, feedback, isFirstPass);
+			filterByDateRange(dueDateCriteriaArray, feedback);
 		}
 	}
 
-	private static void matchDueDateRangeCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String[] dueDateCriteriaArray, StringBuilder feedback, boolean isFirstPass) {
-		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteriaArray[0], feedback);
+	private static void filterByDateRange(String[] dateCriteriaArray, StringBuilder feedback) {
+		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(dateCriteriaArray[0], feedback);
 		if(startDate == null) {
 			return;
 		}
-		Calendar endDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteriaArray[1], feedback);
+		Calendar endDate = DateHandler.changeFromDateStringToDateCalendar(dateCriteriaArray[1], feedback);
 		if(endDate == null) {
 			return;
 		}
-		
 		startDate.set(Calendar.HOUR, NUM_0_HOUR);
 		startDate.set(Calendar.MINUTE, NUM_0_MIN);
 		startDate.set(Calendar.SECOND, NUM_0_SEC);
@@ -501,44 +410,44 @@ public class QLLogic {
 		endDate.set(Calendar.MINUTE, NUM_59_MIN);
 		endDate.set(Calendar.SECOND, NUM_59_SEC);
 		
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
+		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
-			Calendar taskDueDate = _workingList.get(i).getDueDate();
-			if(taskDueDate == null) {
-				return;
+			Task currentTask = _workingList.get(i);
+			Calendar currentTaskDueDate = currentTask.getDueDate();
+			if(currentTaskDueDate == null) {
+				break;
 			}
-			if(taskDueDate.compareTo(startDate) >= 0 && taskDueDate.compareTo(endDate) <= 0) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
+			if(currentTaskDueDate.compareTo(startDate) >= 0 && currentTaskDueDate.compareTo(endDate) <= 0) {
+				bufferList.add(currentTask);
 			}
 		}
-		
-		copyList(bufferList, taskIndexesSatisfyCriteria);
+		copyList(bufferList, _workingList);
 	}
 
-	private static void matchSingleDueDateCriteria(LinkedList<Integer> taskIndexesSatisfyCriteria, String dueDateCriteria, StringBuilder feedback, boolean isFirstPass) {
-		Calendar dueDate = DateHandler.changeFromDateStringToDateCalendar(dueDateCriteria, feedback);
-		if(dueDate == null) {
+	private static void filterBySingleDate(String singleDateCriteria, StringBuilder feedback) {
+		Calendar dateCriteria = DateHandler.changeFromDateStringToDateCalendar(singleDateCriteria, feedback);
+		if(dateCriteria == null) {
 			return;
 		}
-		dueDate.set(Calendar.HOUR, NUM_23_HOUR);
-		dueDate.set(Calendar.MINUTE, NUM_59_MIN);
-		dueDate.set(Calendar.SECOND, NUM_59_SEC);
 		
-		LinkedList<Integer> bufferList = new LinkedList<Integer>();
+		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
-			Calendar taskDueDate = _workingList.get(i).getDueDate();
-			if(taskDueDate == null) {
-				return;
-			}
-			if(taskDueDate.equals(dueDate)) {
-				if(isDuplicated(taskIndexesSatisfyCriteria, i) || isFirstPass) {
-					bufferList.add(i);
-				}
+			Task currentTask = _workingList.get(i);
+			Calendar currentTaskDueDate = currentTask.getDueDate();
+			if(currentTaskDueDate == null) {
+				break;
+			}		
+			
+			int currentTaskDay = currentTaskDueDate.get(Calendar.DAY_OF_MONTH);
+			int currentTaskMonth = currentTaskDueDate.get(Calendar.MONTH);
+			int currentTaskYear = currentTaskDueDate.get(Calendar.YEAR);; 
+			Calendar currentTaskDate = new GregorianCalendar(currentTaskYear, currentTaskMonth, currentTaskDay);
+
+			if(currentTaskDate.equals(dateCriteria)) {
+				bufferList.add(currentTask);
 			} 
 		}
-		copyList(bufferList, taskIndexesSatisfyCriteria);
+		copyList(bufferList, _workingList);
 	}
 	
 	/** Sort methods **/
@@ -590,7 +499,7 @@ public class QLLogic {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
 				switch (order) {
-				case 'a':
+				case CHAR_ASCENDING:
 					if(taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
@@ -598,7 +507,7 @@ public class QLLogic {
 					}
 					break;
 				
-				case 'd':
+				case CHAR_DESCENDING:
 					if(taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
@@ -736,17 +645,43 @@ public class QLLogic {
 		executeCommand("add task two  -d 1502 -p M", feedback);
 		executeCommand("add task three -d 0902 -p H", feedback);
 		executeCommand("add task foura -d 1502 -p L", feedback);
-		executeCommand("add task fourb -d 0902 -p L", feedback);
-		executeCommand("add task five -d 0902 -p L", feedback);
+		executeCommand("add task fourb -d 0904 -p L", feedback);
+		executeCommand("add task five -d 0904 -p L", feedback);
 		executeCommand("add task six -p L", feedback);
 		executeCommand("add task seven -p H", feedback);
 		executeCommand("add task eight", feedback);
+		executeCommand("add task nine -d TDY", feedback);
 		
-		executeCommand("s -d a -p d", feedback);
+		executeCommand("l -d 1502", feedback);
 		displayStub(feedback);
+		recover();
+		executeCommand("l -d 0902:1502", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("l -p L", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("l -o N", feedback);
+		displayStub(feedback);
+		recover();
 		executeCommand("l -o Y", feedback);
 		displayStub(feedback);
-
+		recover();
+		executeCommand("c 1", feedback);
+		executeCommand("c 2", feedback);
+		executeCommand("l -c N", feedback);
+		displayStub(feedback);
+		executeCommand("s -d a -p d", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("l -c Y", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("l -d TMR", feedback);
+		displayStub(feedback);
+		recover();
+		
+		
 		/*
 		executeCommand("l -d 1502", feedback);
 		displayStub(feedback);

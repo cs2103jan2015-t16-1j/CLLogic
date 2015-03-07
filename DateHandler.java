@@ -84,9 +84,9 @@ public class DateHandler {
 		}
 		
 		try {
-			int dateInt = DateHandler.changeFromDateStringToDateInt(dateString);
-			int day = DateHandler.decodeDayFromDateInt(dateInt); 
-			int month = DateHandler.decodeMonthFromDateInt(dateInt);
+			int dateInt = changeFromDateStringToDateInt(dateString);
+			int day = decodeDayFromDateInt(dateInt); 
+			int month = decodeMonthFromDateInt(dateInt);
 
 			if(day > 31) {
 				feedback.append(MESSAGE_INVALID_DAY);
@@ -105,14 +105,14 @@ public class DateHandler {
 	}
 	
 	public static Calendar changeFromDateStringToDateCalendar(String dateString, StringBuilder feedback) {
-		if(!DateHandler.isValidDateFormat(dateString, feedback)) {
+		if(!isValidDateFormat(dateString, feedback)) {
 			return null;
 		} 
 		else {
-			int dateInt = DateHandler.changeFromDateStringToDateInt(dateString);
-			int dayInt = DateHandler.decodeDayFromDateInt(dateInt);
-			int monthInt = DateHandler.decodeMonthFromDateInt(dateInt);
-			int yearInt = DateHandler.decodeYearFromDateInt(dateInt);
+			int dateInt = changeFromDateStringToDateInt(dateString);
+			int dayInt = decodeDayFromDateInt(dateInt);
+			int monthInt = decodeMonthFromDateInt(dateInt);
+			int yearInt = decodeYearFromDateInt(dateInt);
 			return (Calendar) new GregorianCalendar(yearInt, monthInt + OFFSET_CALENDAR_MONTH_FIELD, dayInt);
 		}
 	}

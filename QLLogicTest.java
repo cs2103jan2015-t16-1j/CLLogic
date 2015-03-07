@@ -175,7 +175,7 @@ public class QLLogicTest {
 		
 		feedback.setLength(0);
 		testList = QLLogic.executeCommand("list -d TMR", feedback);
-		assertEquals(feedback.toString(), "No task satisfies criteria entered.");
+		assertEquals(feedback.toString(), "No matches found for criteria entered.");
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -245,21 +245,21 @@ public class QLLogicTest {
 		QLLogic.executeCommand("add task three -d 2402 -p H", feedback);
 		testList = QLLogic.executeCommand("list -d 3201:TDY", feedback);
 		assertEquals(testList.get(0).getName(), "task one");
-		assertEquals(feedback.toString(), MESSAGE_INVALID_DAY + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DAY);
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
 		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
 		testList = QLLogic.executeCommand("list -d 2301:2214", feedback);
 		assertEquals(testList.get(0).getName(), "task one");
-		assertEquals(feedback.toString(), MESSAGE_INVALID_MONTH + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), MESSAGE_INVALID_MONTH);
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
 		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
 		testList = QLLogic.executeCommand("list -d 321:123", feedback);
 		assertEquals(testList.get(0).getName(), "task one");
-		assertEquals(feedback.toString(), MESSAGE_INVALID_DATE_FORMAT + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), MESSAGE_INVALID_DATE_FORMAT);
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -296,7 +296,7 @@ public class QLLogicTest {
 		QLLogic.clearWorkingList(); 
 		QLLogic.executeCommand("add task one -p L -d 0102", feedback);
 		testList = QLLogic.executeCommand("list -p G", feedback);
-		assertEquals(feedback.toString(), MESSAGE_INVALID_PRIORITY_LEVEL + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), MESSAGE_INVALID_PRIORITY_LEVEL);
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -305,7 +305,7 @@ public class QLLogicTest {
 		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
 		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
 		testList = QLLogic.executeCommand("list -c Y", feedback);
-		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), "No matches found for criteria entered.");
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -324,7 +324,7 @@ public class QLLogicTest {
 		QLLogic.executeCommand("add task three -d 0902 -p H", feedback);
 		QLLogic.executeCommand("add task four -d 0702 -p M", feedback);
 		testList = QLLogic.executeCommand("list -o N", feedback);
-		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), "No matches found for criteria entered.");
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -340,7 +340,7 @@ public class QLLogicTest {
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
 		testList = QLLogic.executeCommand("list -l Y", feedback);
-		assertEquals(feedback.toString(), "Invalid field type \"l\".\n" + MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), "Invalid field type \"l\".\n" + "No matches found for criteria entered.");
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
@@ -351,7 +351,7 @@ public class QLLogicTest {
 		testList = QLLogic.executeCommand("list -d 2502", feedback);
 		assertEquals(testList.get(0).getName(), "task three");
 		testList = QLLogic.executeCommand("list", feedback);
-		assertEquals(feedback.toString(), MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		assertEquals(feedback.toString(), "No matches found for criteria entered.");
 		
 	}
 	
