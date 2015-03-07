@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
+	private static final String MESSAGE_NO_MATCHES_FOUND = "No matches found for criteria entered.";
 	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
 	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
 	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
@@ -302,7 +303,7 @@ public class QLLogic {
 			filterWorkingListByCriteria(fields.get(i), feedback);
 		}
 		if(_workingList.isEmpty() || fields.isEmpty()) {
- 			feedback.append("No matches found for criteria entered.");
+ 			feedback.append(MESSAGE_NO_MATCHES_FOUND);
  			_workingList = workingListBackUp;
  		}
 		return _workingList;
