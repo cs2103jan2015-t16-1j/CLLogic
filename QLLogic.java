@@ -64,10 +64,51 @@ public class QLLogic {
 	private static String _fileName;
 	
 	/** General methods **/
-	public static void setup(String fileName) {
+	public static LinkedList<Task> setup(String fileName) {
 		_fileName = fileName; 
 		_workingList = QLStorage.loadFile(fileName);
-		_workingListMaster = _workingList;
+		sortByDate(CHAR_ASCENDING, new StringBuilder());
+		_workingListMaster = new LinkedList<Task>();
+		copyList(_workingList, _workingListMaster);
+		return _workingList;
+	}
+	
+	// Stub
+	public static void setupStub() {
+		_workingList = new LinkedList<Task>();
+		_workingListMaster = new LinkedList<Task>();
+		copyList(_workingList, _workingListMaster);
+	}
+	
+	// Stub
+	public static void displayStub(StringBuilder feedback) {
+		System.out.println("Feedback: " + feedback.toString());
+		
+		System.out.println("	workingList: ");
+		for(int i = 0; i < _workingList.size(); i++) {
+			System.out.print(_workingList.get(i).getName() + " ");
+			try {
+				System.out.print(_workingList.get(i).getDueDateString() + " ");
+			} catch(NullPointerException e) {}
+			try {	
+				System.out.print(_workingList.get(i).getPriority() + " ");
+			} catch(NullPointerException e) {}
+			System.out.println();
+		}
+		
+		System.out.println("	workingListMaster: ");
+		for(int i = 0; i < _workingListMaster.size(); i++) {
+			System.out.print(_workingListMaster.get(i).getName() + " ");
+			try {
+				System.out.print(_workingListMaster.get(i).getDueDateString() + " ");
+			} catch(NullPointerException e) {}
+			try {	
+				System.out.print(_workingListMaster.get(i).getPriority() + " ");
+			} catch(NullPointerException e) {}
+			System.out.println();
+		}
+		System.out.println();
+		feedback.setLength(0);
 	}
 
 	public static LinkedList<Task> executeCommand(String instruction, StringBuilder feedback) {
@@ -101,14 +142,13 @@ public class QLLogic {
 		_workingList = new LinkedList<Task>();
 	}
 	
-	private static void copyList(LinkedList<Integer> fromList, LinkedList<Integer> toList) {
+	private static <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
 
 	/** Multi-command methods **/ 
-	
 	private static <E> boolean isDuplicated(LinkedList<E> list, E e) {
 		
 		if(list == null) {
@@ -122,7 +162,6 @@ public class QLLogic {
 		}
 		return false;
 	}
-
 
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
@@ -192,8 +231,9 @@ public class QLLogic {
 		}
 		
 		_workingList.add(newTask);
+		_workingListMaster.add(newTask);
 		
-		QLStorage.saveFile(_workingList, _fileName);
+		QLStorage.saveFile(_workingListMaster, _fileName);
 		return _workingList;
 	}
 
@@ -216,7 +256,7 @@ public class QLLogic {
 			updateField(fields.get(i), taskToEdit, feedback);
 		}
 				
-		QLStorage.saveFile(_workingList, _fileName);
+		QLStorage.saveFile(_workingListMaster, _fileName);
 		return _workingList;
 	}
 
@@ -230,14 +270,16 @@ public class QLLogic {
 			return _workingList;
 		}
 		
-		deleteTask(taskNumber, feedback);
+		Task taskToDelete = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
+		deleteTask(taskToDelete);
 		
-		QLStorage.saveFile(_workingList, _fileName);
+		QLStorage.saveFile(_workingListMaster, _fileName);
 		return _workingList;
 	}
 
-	private static void deleteTask(int taskNumber, StringBuilder feedback) {
-		_workingList.remove(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
+	private static void deleteTask(Task taskToDelete) {
+		_workingList.remove(taskToDelete);
+		_workingListMaster.remove(taskToDelete);
 	}
 
 	/** Complete methods **/
@@ -250,19 +292,19 @@ public class QLLogic {
 			return _workingList;
 		}
 		
-		completeTask(taskNumber, feedback);
+		Task taskToComplete = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
+		completeTask(taskToComplete);
 		
-		QLStorage.saveFile(_workingList, _fileName);
+		QLStorage.saveFile(_workingListMaster, _fileName);
 		return _workingList;
 	}
 	
-	private static void completeTask(int taskNumber, StringBuilder feedback) {
-		Task taskToChange = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
-		if(taskToChange.getIsCompleted()) {
-			taskToChange.setNotCompleted();
+	private static void completeTask(Task taskToComplete) {
+		if(taskToComplete.getIsCompleted()) {
+			taskToComplete.setNotCompleted();
 		} 
 		else {
-			taskToChange.setCompleted();
+			taskToComplete.setCompleted();
 		}
 	}
 	
@@ -533,6 +575,15 @@ public class QLLogic {
 	}
 
 	private static void sortByPriority(char order, StringBuilder feedback) {
+		LinkedList<Task> tasksWithNoPriority = new LinkedList<Task>();
+		for(int i = 0; i < _workingList.size(); i++){
+			if(_workingList.get(i).getPriority() == 0) {
+				Task removedTask = _workingList.remove(i); 
+				tasksWithNoPriority.add(removedTask);
+				i--;
+			}
+		}
+		
 		for(int i = _workingList.size() - 1; i >= 0; i--) {
 			boolean isSorted = true;
 			for(int j = 0; j < i; j++) {
@@ -560,12 +611,23 @@ public class QLLogic {
 				}
 			}
 			if(isSorted) {
-				return;
+				break;
 			}
 		}
+		tasksWithNoPriority.addAll(_workingList);
+		_workingList = tasksWithNoPriority;
 	}
 	
 	private static void sortByDate(char order, StringBuilder feedback) {
+		LinkedList<Task> tasksWithNoDueDate = new LinkedList<Task>();
+		for(int i = 0; i < _workingList.size(); i++){
+			if(_workingList.get(i).getDueDate() == null) {
+				Task removedTask = _workingList.remove(i); 
+				tasksWithNoDueDate.add(removedTask);
+				i--;
+			}
+		}
+				
 		for(int i = _workingList.size() - 1; i >= 0; i--) {
 			boolean isSorted = true;
 			for(int j = 0; j < i; j++) {
@@ -594,9 +656,11 @@ public class QLLogic {
 				}
 			}
 			if(isSorted) {
-				return;
+				break;
 			}
 		}
+		tasksWithNoDueDate.addAll(_workingList);
+		_workingList = tasksWithNoDueDate;
 	}
 
 	/** Find method **/
@@ -665,7 +729,7 @@ public class QLLogic {
 
 	/** Main method **/
 	public static void main(String args[]) {
-		_workingList = new LinkedList<Task>();
+		setupStub();
 		StringBuilder feedback =  new StringBuilder();
 		
 		executeCommand("add task one -p L -d 1502", feedback);
@@ -673,15 +737,26 @@ public class QLLogic {
 		executeCommand("add task three -d 0902 -p H", feedback);
 		executeCommand("add task foura -d 1502 -p L", feedback);
 		executeCommand("add task fourb -d 0902 -p L", feedback);
-		executeCommand("add task one five -d 0902 -p L", feedback);
+		executeCommand("add task five -d 0902 -p L", feedback);
+		executeCommand("add task six -p L", feedback);
+		executeCommand("add task seven -p H", feedback);
+		executeCommand("add task eight", feedback);
 		
-		executeCommand("f task five one", feedback);
-		
-		System.out.println(feedback.toString());
-		
-		for(int i = 0; i < _workingList.size(); i++) {
-			System.out.println(_workingList.get(i).getName());
-		}
+		executeCommand("s -d a -p d", feedback);
+		displayStub(feedback);
+		executeCommand("l -o Y", feedback);
+		displayStub(feedback);
+
+		/*
+		executeCommand("l -d 1502", feedback);
+		displayStub(feedback);
+		executeCommand("e 2 -n task 2", feedback);
+		displayStub(feedback);
+		executeCommand("add play -d 0803 -p L", feedback);
+		displayStub(feedback);
+		executeCommand("delete 3 ", feedback);
+		displayStub(feedback);
+		*/
 	}
 	
 }

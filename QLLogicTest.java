@@ -17,7 +17,7 @@ public class QLLogicTest {
 	
 	@Before
 	public void setup() {
-		QLLogic._workingList = new LinkedList<Task>();
+		QLLogic.setupStub();
 	}
 
 	@Test

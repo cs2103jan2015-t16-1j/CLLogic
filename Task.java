@@ -7,8 +7,6 @@ public class Task {
 	private static final char CHAR_PRIORITY_HIGH = 'H';
 	private static final char CHAR_PRIORITY_MEDIUM = 'M';
 	private static final char CHAR_PRIORITY_LOW = 'L';
-	private static final char CHAR_NO_PRIORITY_LEVEL = 'N';
-	
 	private static final int OFFSET_CALENDAR_MONTH = -1;
 	
 	private static final int NUM_0_SEC = 0;
@@ -35,7 +33,6 @@ public class Task {
 		_name = new String(name);
 		_isCompleted = false;
 		_isDue = false;
-		_priority = CHAR_NO_PRIORITY_LEVEL;	
 	}
 	
 	/* Mutators */
@@ -95,7 +92,7 @@ public class Task {
 	
 	public void updateIsDue() {
 		Calendar today = new GregorianCalendar();
-		if(today.compareTo(_dueDate) < 0) {
+		if(_dueDate == null || today.compareTo(_dueDate) < 0) {
 			_isDue = false;
 		}
 		else {
@@ -147,12 +144,12 @@ public class Task {
 	
 	public String getStartDateString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(_startDate);
+		return sdf.format(_dueDate.getTime());
 	}
 	
 	public String getDueDateString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(_dueDate);
+		return sdf.format(_dueDate.getTime());
 	}
 	
 	public boolean getIsCompleted() {
@@ -160,6 +157,7 @@ public class Task {
 	}
 	
 	public boolean getIsDue() {
+		updateIsDue();
 		return _isDue;
 	}
 	
