@@ -23,7 +23,6 @@ public class QLLogic {
 	private static final int INDEX_PRIORITY_LEVEL = 0;
 	
 	private static final int NUM_SPLIT_TWO = 2;
-	private static final int NUM_INVALID_TASK_NUMBER = -1;
 	private static final int NUM_0_SEC = 0;
 	private static final int NUM_0_MIN = 0;
 	private static final int NUM_0_HOUR = 0;
@@ -61,16 +60,18 @@ public class QLLogic {
 
 	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
+	public static LinkedList<Task> _workingListMaster;
 	private static String _fileName;
 	
 	/** General methods **/
 	public static void setup(String fileName) {
 		_fileName = fileName; 
 		_workingList = QLStorage.loadFile(fileName);
+		_workingListMaster = _workingList;
 	}
 
 	public static LinkedList<Task> executeCommand(String instruction, StringBuilder feedback) {
-		String[] splittedInstruction = splitCommandAndFields(instruction);
+		String[] splittedInstruction = CommandParser.splitCommandAndFields(instruction);
 		
 		String command = splittedInstruction[INDEX_COMMAND].trim();
 		String fieldLine = splittedInstruction[INDEX_FIELDS].trim();
@@ -99,107 +100,14 @@ public class QLLogic {
 	public static void clearWorkingList() {
 		_workingList = new LinkedList<Task>();
 	}
-
-	/** Multi-command methods **/ 
-	
-	/* CommandProcessor Class start */
-	private static String[] splitCommandAndFields(String instruction) {
-		String[] splittedInstruction = instruction.split(STRING_BLANK_SPACE, NUM_SPLIT_TWO);
-		if(splittedInstruction.length == 1) {
-			String command = splittedInstruction[INDEX_COMMAND];
-			splittedInstruction = new String[2];
-			splittedInstruction[INDEX_COMMAND] = command;
-			splittedInstruction[INDEX_FIELDS] = "";
-		}
-		return splittedInstruction;
-	}
-	
-	private static LinkedList<String> processFieldLine(String fieldLine) {
-		String[] fields_array = fieldLine.split(STRING_DASH);
-		
-		LinkedList<String> fields_linkedList = new LinkedList<String>();
-		for(int i = 0; i < fields_array.length; i++) {
-			String field = fields_array[i].trim();
-			if(!field.equals(STRING_NO_CHAR)) {
-				fields_linkedList.add(field);
-			}
-		}
-		return fields_linkedList;
-	}
-		
-	private static int extractAndCheckTaskNumber(String fieldLineWithTaskNumber, StringBuilder feedback) {
-		String taskNumberString = extractTaskNumberString(fieldLineWithTaskNumber);
-		if(isValidTaskNumber(taskNumberString, feedback)) {
-			return Integer.parseInt(taskNumberString);
-		} 
-		else {
-			return NUM_INVALID_TASK_NUMBER;
-		}
-	}
-
-	private static String extractTaskNumberString(String fieldLineWithTaskNumber) {
-		int taskNumberEndIndex = fieldLineWithTaskNumber.length();
-		for(int i = 0; i < fieldLineWithTaskNumber.length(); i++) {
-			if(fieldLineWithTaskNumber.charAt(i) == ' ') {
-				taskNumberEndIndex = i;
-				break;
-			}
-		}
-		return fieldLineWithTaskNumber.substring(0, taskNumberEndIndex).trim();
-	}
-	
-	private static boolean isValidTaskNumber(String taskNumberString, StringBuilder feedback) {
-		try {
-			if(taskNumberString.equals(STRING_NO_CHAR)) {
-				feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-				return false;
-			} 
-			
-
-			if(Integer.parseInt(taskNumberString) > _workingList.size() || Integer.parseInt(taskNumberString) < 1) {
-				feedback.append(MESSAGE_TASK_NUMBER_OUT_OF_RANGE);
-				return false;
-			}
-			return true;
-		} catch(NumberFormatException e) {
-			feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-			return false;
-		}
-	}
-	
-	private static boolean isValidPriorityLevel(String priorityLevelString, StringBuilder feedback) {
-		if(priorityLevelString.equals(STRING_NO_CHAR)) {
-			feedback.append(MESSAGE_INVALID_PRIORITY_LEVEL);
-			return false;
-		}
-		
-		char priority = priorityLevelString.charAt(INDEX_PRIORITY_LEVEL);
-		
-		if(priority == 'L' || priority == 'M' || priority == 'H') {
-			return true;
-		} 
-		else {
-			feedback.append(MESSAGE_INVALID_PRIORITY_LEVEL);
-			return false;
-		}
-	}
 	
 	private static void copyList(LinkedList<Integer> fromList, LinkedList<Integer> toList) {
 		toList.clear();
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-	
-	private static boolean isValidYesNo(String yesNoString, StringBuilder feedback) {
-		if(yesNoString.equalsIgnoreCase(STRING_YES) || yesNoString.equalsIgnoreCase(STRING_NO)) {
-			return true;
-		}
-		else {
-			feedback.append(MESSAGE_INVALID_YES_NO);
-			return false;
-		}
-	}
-	/* CommandProcessor Class end */
+
+	/** Multi-command methods **/ 
 	
 	private static <E> boolean isDuplicated(LinkedList<E> list, E e) {
 		
@@ -249,7 +157,7 @@ public class QLLogic {
 	}
 
 	private static void updatePriority(Task task, StringBuilder feedback, String fieldContent) {
-		if(isValidPriorityLevel(fieldContent, feedback)) {
+		if(CommandParser.isValidPriorityLevel(fieldContent, feedback)) {
 			task.setPriority(fieldContent.charAt(INDEX_PRIORITY_LEVEL));
 		}
 	}
@@ -269,13 +177,13 @@ public class QLLogic {
 	
 	/** Add methods **/
 	private static LinkedList<Task> executeAdd(String fieldLineWithName, StringBuilder feedback) {
-		String taskName = extractAndCheckTaskName(fieldLineWithName, feedback);
-		if(taskName == null) {
+		String taskName = CommandParser.extractTaskName(fieldLineWithName);
+		if(!CommandParser.isValidTaskName(taskName, feedback)) {
 			return _workingList;
 		}
 		
 		String fieldLine= fieldLineWithName.replaceFirst(taskName, "").trim();
-		LinkedList<String> fields = processFieldLine(fieldLine);
+		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		
 		Task newTask = new Task(taskName);
 		
@@ -288,47 +196,19 @@ public class QLLogic {
 		QLStorage.saveFile(_workingList, _fileName);
 		return _workingList;
 	}
-	
-	private static String extractAndCheckTaskName(String fieldLineWithName, StringBuilder feedback) {
-		String taskName = extractTaskName(fieldLineWithName);
-		if(isValidTaskName(taskName, feedback)) {
-			return taskName;
-		} 
-		else {
-			return null;
-		}
-	}
-	
-	private static String extractTaskName(String fieldLineWithName) {
-		int taskNameEndIndex = fieldLineWithName.length();
-		for(int i = 0; i < fieldLineWithName.length(); i++) {
-			if(fieldLineWithName.charAt(i) == '-') {
-				taskNameEndIndex = i;
-				break;
-			}
-		}
-		return fieldLineWithName.substring(0, taskNameEndIndex).trim();
-	}
-	
-	private static boolean isValidTaskName(String taskName, StringBuilder feedback) {
-		if(taskName.equals(STRING_NO_CHAR)) {
-			feedback.append(MESSAGE_INVALID_TASK_NAME);
-			return false;
-		} 
-		else {
-			return true;
-		}
-	}
 
 	/** Edit methods **/
 	private static LinkedList<Task> executeEdit(String fieldLineWithTaskNumber, StringBuilder feedback) {
-		int taskNumber = extractAndCheckTaskNumber(fieldLineWithTaskNumber, feedback);
-		if(taskNumber == NUM_INVALID_TASK_NUMBER) {
+		int taskNumber;
+		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(!CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
 			return _workingList;
+		} else {
+			taskNumber = Integer.parseInt(taskNumberString);
 		}
 		
 		String fieldLine= fieldLineWithTaskNumber.replaceFirst(String.valueOf(taskNumber), "").trim();
-		LinkedList<String> fields = processFieldLine(fieldLine);
+		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		
 		Task taskToEdit = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
 		
@@ -342,8 +222,11 @@ public class QLLogic {
 
 	/** Delete methods **/
 	private static LinkedList<Task> executeDelete(String fieldLineWithTaskNumber, StringBuilder feedback) {
-		int taskNumber = extractAndCheckTaskNumber(fieldLineWithTaskNumber, feedback);
-		if(taskNumber == NUM_INVALID_TASK_NUMBER) {
+		int taskNumber;
+		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
+			taskNumber = Integer.parseInt(taskNumberString);
+		} else {
 			return _workingList;
 		}
 		
@@ -359,8 +242,11 @@ public class QLLogic {
 
 	/** Complete methods **/
 	private static LinkedList<Task> executeComplete(String fieldLineWithTaskNumber, StringBuilder feedback) {
-		int taskNumber = extractAndCheckTaskNumber(fieldLineWithTaskNumber, feedback);
-		if(taskNumber == NUM_INVALID_TASK_NUMBER) {
+		int taskNumber;
+		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
+			taskNumber = Integer.parseInt(taskNumberString);
+		} else {
 			return _workingList;
 		}
 		
@@ -382,9 +268,8 @@ public class QLLogic {
 	
 	/** List methods **/
 	private static LinkedList<Task> executeList(String fieldLine, StringBuilder feedback) {
-		LinkedList<String> fields = processFieldLine(fieldLine);
+		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		LinkedList<Integer> taskIndexesSatisfyCriteria = new LinkedList<Integer>(); 
-		boolean listFiltered = false;
 		boolean isFirstPass;
 		
 		for(int i = 0; i < fields.size(); i++) {
@@ -397,15 +282,11 @@ public class QLLogic {
 			updateTaskIndexesSatisfyCriteria(taskIndexesSatisfyCriteria, fields.get(i), feedback, isFirstPass);
 		}
 		
-		if(!taskIndexesSatisfyCriteria.isEmpty()) {
-			filterWorkingList(taskIndexesSatisfyCriteria);
-			listFiltered = true;
-		} 
-		
-		if(!listFiltered) {
+		if(taskIndexesSatisfyCriteria.isEmpty()) {
 			feedback.append(MESSAGE_NO_TASK_SATISFY_CRITERIA);
+		} else {
+			filterWorkingList(taskIndexesSatisfyCriteria);
 		}
-		
 		return _workingList;
 	}
 	
@@ -451,7 +332,7 @@ public class QLLogic {
 	}
 
 	private static void findIndexesMatchDueStatus(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
-		if(isValidYesNo(fieldCriteria, feedback)) {
+		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
 			if(fieldCriteria.equals(STRING_YES)) {
 				matchDueYes(taskIndexesSatisfyCriteria, feedback, isFirstPass);
 			}
@@ -487,7 +368,7 @@ public class QLLogic {
 	}
 	
 	private static void findIndexesMatchCompleteStatus(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
-		if(isValidYesNo(fieldCriteria, feedback)) {
+		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
 			if(fieldCriteria.equalsIgnoreCase(STRING_YES)) {
 				matchCompleteYes(taskIndexesSatisfyCriteria, feedback, isFirstPass);
 			}
@@ -523,7 +404,7 @@ public class QLLogic {
 	}
 
 	private static void findIndexesMatchPriority(LinkedList<Integer> taskIndexesSatisfyCriteria, String fieldCriteria, StringBuilder feedback, boolean isFirstPass) {
-		if(isValidPriorityLevel(fieldCriteria, feedback)) {
+		if(CommandParser.isValidPriorityLevel(fieldCriteria, feedback)) {
 			char priorityLevel = fieldCriteria.charAt(INDEX_PRIORITY_LEVEL);
 			matchPriorityLevelCriteria(taskIndexesSatisfyCriteria, priorityLevel, feedback, isFirstPass);
 		}
@@ -620,12 +501,12 @@ public class QLLogic {
 	
 	/** Sort methods **/
 	private static LinkedList<Task> executeSort(String fieldLine, StringBuilder feedback) {
-		LinkedList<String> fields = processFieldLine(fieldLine);
+		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		if(fields.size() == 0) {
 			feedback.append("No field entered.");
 			return _workingList;
 		}	
-		LinkedList<char[]> sortingCriteria = getSortingCriteria(fields);
+		LinkedList<char[]> sortingCriteria = CommandParser.getSortingCriteria(fields);
 		sortByCriteria(sortingCriteria, feedback);
 		return _workingList;
 		
@@ -649,18 +530,6 @@ public class QLLogic {
 				break;
 			}
 		}
-	}
-
-	private static LinkedList<char[]> getSortingCriteria(LinkedList<String> fields) {
-		LinkedList<char[]> sortingCriteria = new LinkedList<char[]>();
-		for(int i = 0; i < fields.size(); i++) {
-			String criterion = fields.get(i);
-			char criterionType = criterion.charAt(INDEX_FIELD_TYPE);
-			String criterionOrderString = criterion.substring(INDEX_FIELD_CONTENT_START).trim();
-			char criteriaOrder = criterionOrderString.charAt(0);
-			sortingCriteria.add(new char[]{criterionType, criteriaOrder});
-		}
-		return sortingCriteria;
 	}
 
 	private static void sortByPriority(char order, StringBuilder feedback) {
