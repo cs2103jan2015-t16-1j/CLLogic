@@ -4,6 +4,8 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
+	private static final String MESSAGE_NOTHING_TO_REDO = "Nothing to redo.";
+	private static final String MESSAGE_NOTHING_TO_UNDO = "Nothing to undo.";
 	private static final char CHAR_DESCENDING_UPPERCASE = 'D';
 	private static final char CHAR_ASCENDING_UPPERCASE = 'A';
 	private static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range entered.";
@@ -56,12 +58,16 @@ public class QLLogic {
 
 	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
-	public static LinkedList<Task> _workingListMaster;
+	private static LinkedList<Task> _workingListMaster;
+	private static LinkedList<LinkedList<Task>> _undoStack;
+	private static LinkedList<LinkedList<Task>> _redoStack;
 	private static String _fileName;
 	
 	/** General methods **/
 	public static LinkedList<Task> setup(String fileName) {
 		_fileName = fileName; 
+		_undoStack = new LinkedList<LinkedList<Task>>();
+		_redoStack = new LinkedList<LinkedList<Task>>();
 		_workingList = QLStorage.loadFile(fileName);
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
@@ -74,6 +80,8 @@ public class QLLogic {
 	
 	// Stub
 	public static void setupStub() {
+		_undoStack = new LinkedList<LinkedList<Task>>();
+		_redoStack = new LinkedList<LinkedList<Task>>();
 		_workingList = new LinkedList<Task>();
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
@@ -130,6 +138,12 @@ public class QLLogic {
 			return executeSort(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_FIND) || command.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
 			return executeFind(fieldLine, feedback);
+		} else if(command.equalsIgnoreCase("undo") || command.equalsIgnoreCase("u")) {
+			undo(feedback);
+			return _workingList;
+		} else if(command.equalsIgnoreCase("redo") || command.equalsIgnoreCase("r")) {
+			redo(feedback);
+			return _workingList;
 		} else {
 			feedback.append(MESSAGE_INVALID_COMMAND);
 			return _workingList;
@@ -147,6 +161,41 @@ public class QLLogic {
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
+	
+	private static void updateUndoStack() {
+		_undoStack.push(_workingListMaster);
+		_undoStack.push(_workingList);
+		_redoStack.clear();
+	}
+	
+	private static void undo(StringBuilder feedback) {
+		if(_undoStack.isEmpty()) {
+			feedback.append(MESSAGE_NOTHING_TO_UNDO);
+			return;
+		}
+		LinkedList<Task> previousWorkingList = _undoStack.pop();
+		LinkedList<Task> previousWorkingListMaster = _undoStack.pop();
+		_redoStack.push(previousWorkingListMaster);
+		_redoStack.push(previousWorkingList);
+		_workingList = previousWorkingList; 
+		_workingListMaster = previousWorkingListMaster; 
+		QLStorage.saveFile(_workingListMaster, _fileName);
+	}
+	
+	private static void redo(StringBuilder feedback) {
+		if(_redoStack.isEmpty()) {
+			feedback.append(MESSAGE_NOTHING_TO_REDO);
+			return;
+		}
+		LinkedList<Task> nextWorkingList = _redoStack.pop();
+		LinkedList<Task> nextWorkingListMaster = _redoStack.pop();
+		_undoStack.push(nextWorkingListMaster);
+		_undoStack.push(nextWorkingList);
+		_workingList = nextWorkingList; 
+		_workingListMaster = nextWorkingListMaster; 
+		QLStorage.saveFile(_workingListMaster, _fileName);
+	}
+	
 	
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
@@ -172,7 +221,7 @@ public class QLLogic {
 				
 		default: 
 			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append(STRING_NEW_LINE);
-			break;
+			return;
 		}
 	}
 	
@@ -230,6 +279,7 @@ public class QLLogic {
 		_workingListMaster.add(newTask);
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
+		updateUndoStack();
 		return _workingList;
 	}
 
@@ -253,6 +303,7 @@ public class QLLogic {
 		}
 				
 		QLStorage.saveFile(_workingListMaster, _fileName);
+		updateUndoStack();
 		return _workingList;
 	}
 
@@ -270,6 +321,7 @@ public class QLLogic {
 		deleteTask(taskToDelete);
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
+		updateUndoStack();
 		return _workingList;
 	}
 
@@ -292,6 +344,7 @@ public class QLLogic {
 		completeTask(taskToComplete);
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
+		updateUndoStack();
 		return _workingList;
 	}
 	
@@ -315,7 +368,9 @@ public class QLLogic {
 		if(_workingList.isEmpty() || fields.isEmpty()) {
  			feedback.append(MESSAGE_NO_MATCHES_FOUND);
  			_workingList = workingListBackUp;
+ 			return _workingList;
  		}
+		updateUndoStack();
 		return _workingList;
 	}
 
@@ -606,8 +661,8 @@ public class QLLogic {
 		}	
 		LinkedList<char[]> sortingCriteria = CommandParser.getSortingCriteria(fields);
 		sortByCriteria(sortingCriteria, feedback);
+		updateUndoStack();
 		return _workingList;
-		
 	}
 	
 	private static void sortByCriteria(LinkedList<char[]> sortingCriteria, StringBuilder feedback) {
@@ -791,7 +846,16 @@ public class QLLogic {
 		executeCommand("add task ten -s TDY -d 1903", feedback);
 		executeCommand("add task eleven -s 0403 -d 0803", feedback);
 		executeCommand("add task twelve -s 01012015 -d 01012016", feedback);
-	
+		
+		executeCommand("a task thirteen -d 1502", feedback);
+		displayStub(feedback);
+		executeCommand("u", feedback);
+		displayStub(feedback);
+		executeCommand("r", feedback);
+		displayStub(feedback);
+		
+		
+		/*
 		executeCommand("f -d 1502", feedback);
 		displayStub(feedback);
 		recover();
@@ -825,6 +889,7 @@ public class QLLogic {
 		executeCommand("s -l a", feedback);
 		displayStub(feedback);
 		recover();
+		*/
 	
 		/*
 		executeCommand("c 1", feedback);
