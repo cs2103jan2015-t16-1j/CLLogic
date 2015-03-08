@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
+	private static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range entered.";
 	private static final String MESSAGE_NO_MATCHES_FOUND = "No matches found for criteria entered.";
 	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
 	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
@@ -154,6 +155,10 @@ public class QLLogic {
 		case 'd':		
 			updateDueDate(task, feedback, fieldContent);
 			break;
+		
+		case 's':
+			updateStartDate(task, feedback, fieldContent);
+			break;
 			
 		case 'p':
 			updatePriority(task, feedback, fieldContent);
@@ -194,6 +199,13 @@ public class QLLogic {
 			return;
 		}
 		task.setDueDate(fieldContent);
+	}
+	
+	private static void updateStartDate(Task task, StringBuilder feedback, String fieldContent) {
+		if(!DateHandler.isValidDateFormat(fieldContent, feedback)) {
+			return;
+		}
+		task.setStartDate(fieldContent);
 	}
 	
 	/** Add methods **/
@@ -312,8 +324,13 @@ public class QLLogic {
 		char fieldType = field.charAt(INDEX_FIELD_TYPE);
 		String fieldCriteria = field.substring(INDEX_FIELD_CONTENT_START).trim();
 		switch(fieldType) {
-		case 'd':		
-			filterByDueDate(fieldCriteria, feedback);
+		case 'd':	
+		case 's':
+			filterByDate(fieldCriteria, feedback, fieldType);
+			break;
+			
+		case 'l':
+			filterByPeriod(fieldCriteria, feedback);
 			break;
 			
 		case 'p':
@@ -391,22 +408,62 @@ public class QLLogic {
 			copyList(bufferList, _workingList);
 		}
 	}
-
-	private static void filterByDueDate(String fieldCriteria, StringBuilder feedback) {
+	private static void filterByPeriod(String fieldCriteria, StringBuilder feedback) {
+		if(fieldCriteria.equals(STRING_NO_CHAR)) {
+			feedback.append(MESSAGE_NO_DATE_ENTERED);
+			return;
+		}
+		String[] periodRange = fieldCriteria.split(":");
+		if(periodRange.length != 2) {
+			feedback.append(MESSAGE_INVALID_DATE_RANGE);
+			return;
+		}
+	
+		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(periodRange[0], feedback);
+		if(startDate == null) {
+			return;
+		}
+		Calendar endDate = DateHandler.changeFromDateStringToDateCalendar(periodRange[1], feedback);
+		if(endDate == null) {
+			return;
+		}
+		startDate.set(Calendar.HOUR, NUM_0_HOUR);
+		startDate.set(Calendar.MINUTE, NUM_0_MIN);
+		startDate.set(Calendar.SECOND, NUM_0_SEC);
+		
+		endDate.set(Calendar.HOUR, NUM_23_HOUR);
+		endDate.set(Calendar.MINUTE, NUM_59_MIN);
+		endDate.set(Calendar.SECOND, NUM_59_SEC);
+		
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+		for(int i = 0; i < _workingList.size(); i++) {
+			Task currentTask = _workingList.get(i);
+			Calendar currentTaskStartDate = currentTask.getStartDate();
+			Calendar currentTaskDueDate = currentTask.getDueDate();
+			if(currentTaskStartDate != null && currentTaskDueDate != null) {
+				if(currentTaskStartDate.compareTo(startDate) >= 0 && currentTaskDueDate.compareTo(endDate) <= 0) {
+					bufferList.add(currentTask);
+				}
+			}
+		}
+		copyList(bufferList, _workingList);
+	}
+	
+	private static void filterByDate(String fieldCriteria, StringBuilder feedback, char startOrDueDate) {
 		if(fieldCriteria.equals(STRING_NO_CHAR)) {
 			feedback.append(MESSAGE_NO_DATE_ENTERED);
 			return;
 		}
 		String[] dueDateCriteriaArray = fieldCriteria.split(":");
 		if(dueDateCriteriaArray.length == 1) {
-			filterBySingleDate(dueDateCriteriaArray[0], feedback);		
+			filterBySingleDate(dueDateCriteriaArray[0], feedback, startOrDueDate);		
 		} 
 		else if(dueDateCriteriaArray.length == 2) {
-			filterByDateRange(dueDateCriteriaArray, feedback);
+			filterByDateRange(dueDateCriteriaArray, feedback, startOrDueDate);
 		}
 	}
 
-	private static void filterByDateRange(String[] dateCriteriaArray, StringBuilder feedback) {
+	private static void filterByDateRange(String[] dateCriteriaArray, StringBuilder feedback, char startOrDueDate) {
 		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(dateCriteriaArray[0], feedback);
 		if(startDate == null) {
 			return;
@@ -426,18 +483,26 @@ public class QLLogic {
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
 			Task currentTask = _workingList.get(i);
-			Calendar currentTaskDueDate = currentTask.getDueDate();
-			if(currentTaskDueDate == null) {
-				break;
+			
+			Calendar currentTaskDate;
+			if(startOrDueDate == 's') {
+				currentTaskDate = currentTask.getStartDate();
+			} else if(startOrDueDate == 'd') {
+				currentTaskDate = currentTask.getDueDate();
+			} else {
+				currentTaskDate = null;
 			}
-			if(currentTaskDueDate.compareTo(startDate) >= 0 && currentTaskDueDate.compareTo(endDate) <= 0) {
-				bufferList.add(currentTask);
+			
+			if(currentTaskDate != null) {
+				if(currentTaskDate.compareTo(startDate) >= 0 && currentTaskDate.compareTo(endDate) <= 0) {
+					bufferList.add(currentTask);
+				}
 			}
 		}
 		copyList(bufferList, _workingList);
 	}
 
-	private static void filterBySingleDate(String singleDateCriteria, StringBuilder feedback) {
+	private static void filterBySingleDate(String singleDateCriteria, StringBuilder feedback, char startOrDueDate) {
 		Calendar dateCriteria = DateHandler.changeFromDateStringToDateCalendar(singleDateCriteria, feedback);
 		if(dateCriteria == null) {
 			return;
@@ -446,23 +511,30 @@ public class QLLogic {
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
 			Task currentTask = _workingList.get(i);
-			Calendar currentTaskDueDate = currentTask.getDueDate();
-			if(currentTaskDueDate == null) {
-				break;
-			}		
 			
-			int currentTaskDay = currentTaskDueDate.get(Calendar.DAY_OF_MONTH);
-			int currentTaskMonth = currentTaskDueDate.get(Calendar.MONTH);
-			int currentTaskYear = currentTaskDueDate.get(Calendar.YEAR);; 
-			Calendar currentTaskDate = new GregorianCalendar(currentTaskYear, currentTaskMonth, currentTaskDay);
-
-			if(currentTaskDate.equals(dateCriteria)) {
-				bufferList.add(currentTask);
-			} 
+			Calendar currentTaskDate;
+			if(startOrDueDate == 's') {
+				currentTaskDate = currentTask.getStartDate();
+			} else if(startOrDueDate == 'd') {
+				currentTaskDate = currentTask.getDueDate();
+			} else {
+				currentTaskDate = null;
+			}
+			
+			if(currentTaskDate != null) {
+				int currentTaskDay = currentTaskDate.get(Calendar.DAY_OF_MONTH);
+				int currentTaskMonth = currentTaskDate.get(Calendar.MONTH);
+				int currentTaskYear = currentTaskDate.get(Calendar.YEAR); 
+				Calendar currentTaskDateNoTime = new GregorianCalendar(currentTaskYear, currentTaskMonth, currentTaskDay);
+				
+				if(currentTaskDateNoTime.equals(dateCriteria)) {
+					bufferList.add(currentTask);
+				} 
+			}		
 		}
 		copyList(bufferList, _workingList);
 	}
-	
+
 	private static void findTasksMatchKeywords(String[] keywords, StringBuilder feedback) {
 		LinkedList<Object[]> foundTasksWithMatchScore = new LinkedList<Object[]>();
 		for(int i = 0; i < _workingList.size(); i++) {
@@ -545,7 +617,11 @@ public class QLLogic {
 				break;
 				
 			case 'p':
-				sortByPriority(criterionOrder,feedback);
+				sortByPriority(criterionOrder, feedback);
+				break;
+			
+			case 'l':
+				sortByDuration(criterionOrder, feedback);
 				break;
 				
 			default:
@@ -553,6 +629,51 @@ public class QLLogic {
 				break;
 			}
 		}
+	}
+
+	private static void sortByDuration(char order, StringBuilder feedback) {
+		LinkedList<Task> tasksWithNoDuration = new LinkedList<Task>();
+		for(int i = 0; i < _workingList.size(); i++){
+			if(_workingList.get(i).getDuration() == -1) {
+				Task removedTask = _workingList.remove(i); 
+				tasksWithNoDuration.add(removedTask);
+				i--;
+			}
+		}
+		
+		for(int i = _workingList.size() - 1; i >= 0; i--) {
+			boolean isSorted = true;
+			for(int j = 0; j < i; j++) {
+				Task taskLeft = _workingList.get(j);
+				Task taskRight = _workingList.get(j + 1);
+				switch (order) {
+				case CHAR_ASCENDING:
+					if(taskLeft.getDuration() > taskRight.getDuration()) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+				
+				case CHAR_DESCENDING:
+					if(taskLeft.getDuration() < taskRight.getDuration()) {
+						_workingList.set(j + 1, taskLeft);
+						_workingList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+				default:
+					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
+					return;
+				}
+			}
+			if(isSorted) {
+				break;
+			}
+		}
+		tasksWithNoDuration.addAll(_workingList);
+		_workingList = tasksWithNoDuration;
+		
 	}
 
 	private static void sortByPriority(char order, StringBuilder feedback) {
@@ -660,8 +781,11 @@ public class QLLogic {
 		executeCommand("add task six -p L", feedback);
 		executeCommand("add task seven -p H", feedback);
 		executeCommand("add task eight", feedback);
-		executeCommand("add task nine -d TDY", feedback);
-		
+		executeCommand("add task nine -s 0503 -d 2003", feedback);
+		executeCommand("add task ten -s TDY -d 1903", feedback);
+		executeCommand("add task eleven -s 0403 -d 0803", feedback);
+		executeCommand("add task twelve -s 01012015 -d 01012016", feedback);
+	
 		executeCommand("f -d 1502", feedback);
 		displayStub(feedback);
 		recover();
@@ -677,7 +801,25 @@ public class QLLogic {
 		executeCommand("f -o Y", feedback);
 		displayStub(feedback);
 		recover();
-		
+		executeCommand("f -s 0803", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("f -s 0803:0803", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("f -s 0603:0903 -d 1803:2103", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("f -o Y", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("f -l 0403:2003", feedback);
+		displayStub(feedback);
+		recover();
+		executeCommand("s -l a", feedback);
+		displayStub(feedback);
+		recover();
+	
 		/*
 		executeCommand("c 1", feedback);
 		executeCommand("c 2", feedback);

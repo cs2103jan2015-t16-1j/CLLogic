@@ -59,7 +59,11 @@ public class Task {
 		int startMonth = DateHandler.decodeMonthFromDateInt(startDateInt);
 		int startYear = DateHandler.decodeYearFromDateInt(startDateInt);
 		
-		_startDate = new GregorianCalendar(startYear, startMonth + OFFSET_CALENDAR_MONTH, startDay, NUM_0_HOUR, NUM_0_MIN, NUM_0_SEC);
+		_startDate = new GregorianCalendar(startYear, 
+				startMonth + OFFSET_CALENDAR_MONTH, 
+				startDay, 
+				NUM_0_HOUR, 
+				NUM_0_MIN, NUM_0_SEC);
 	}
 	
 	public void setDueDate (String dueDateString) {
@@ -69,7 +73,11 @@ public class Task {
 		int dueMonth = DateHandler.decodeMonthFromDateInt(dueDateInt);
 		int dueYear = DateHandler.decodeYearFromDateInt(dueDateInt);
 		
-		_dueDate = new GregorianCalendar(dueYear, dueMonth + OFFSET_CALENDAR_MONTH, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
+		_dueDate = new GregorianCalendar(dueYear, 
+				dueMonth + OFFSET_CALENDAR_MONTH, 
+				dueDay, 
+				NUM_23_HOUR, 
+				NUM_59_MIN, NUM_59_SEC);
 		
 		updateIsOverdue();
 	}
@@ -84,9 +92,11 @@ public class Task {
 	
 	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
+		/*
 		today.set(Calendar.HOUR, NUM_0_HOUR);
 		today.set(Calendar.MINUTE, NUM_0_MIN);
 		today.set(Calendar.SECOND, NUM_0_SEC);
+		*/
 		if(_dueDate == null || _dueDate.compareTo(today) > 0) {
 			_isOverdue = false;
 		}
@@ -142,7 +152,7 @@ public class Task {
 	
 	public String getStartDateString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(_dueDate.getTime());
+		return sdf.format(_startDate.getTime());
 	}
 	
 	public String getDueDateString() {
@@ -161,5 +171,23 @@ public class Task {
 	
 	public boolean getShouldSync() {
 		return _shouldSync;
+	}
+	
+	public int getDuration() {
+		if(_dueDate == null || _startDate == null || _dueDate.compareTo(_startDate) < 0) {
+			return -1;
+		}
+		Calendar _dueDateDummy = new GregorianCalendar(_dueDate.get(Calendar.YEAR), 
+				_dueDate.get(Calendar.MONTH),
+				_dueDate.get(Calendar.DAY_OF_MONTH));
+		Calendar _startDateDummy  = new GregorianCalendar(_startDate.get(Calendar.YEAR), 
+				_startDate.get(Calendar.MONTH),
+				_startDate.get(Calendar.DAY_OF_MONTH));
+		int duration = 0;
+		while(!_dueDateDummy.equals(_startDateDummy)) {
+			_startDateDummy.add(Calendar.DAY_OF_MONTH, 1);
+			duration++;
+		}
+		return duration; 
 	}
 }
