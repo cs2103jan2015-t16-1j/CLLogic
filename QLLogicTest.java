@@ -339,8 +339,8 @@ public class QLLogicTest {
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 
-		testList = QLLogic.executeCommand("find -l Y", feedback);
-		assertEquals(feedback.toString(), "Invalid field type \"l\".\n" + "No matches found for criteria entered.");
+		testList = QLLogic.executeCommand("find -e Y", feedback);
+		assertEquals(feedback.toString(), "Invalid field type \"e\".\n" + "No matches found for criteria entered.");
 		
 		feedback.setLength(0);
 		QLLogic.clearWorkingList(); 

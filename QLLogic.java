@@ -4,6 +4,8 @@ import java.util.LinkedList;
 
 public class QLLogic {
 
+	private static final char CHAR_DESCENDING_UPPERCASE = 'D';
+	private static final char CHAR_ASCENDING_UPPERCASE = 'A';
 	private static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range entered.";
 	private static final String MESSAGE_NO_MATCHES_FOUND = "No matches found for criteria entered.";
 	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
@@ -49,8 +51,8 @@ public class QLLogic {
 	private static final String STRING_YES = "Y";
 	private static final String STRING_NEW_LINE = "\n";
 	
-	private static final char CHAR_DESCENDING = 'd';
-	private static final char CHAR_ASCENDING = 'a';
+	private static final char CHAR_DESCENDING_LOWERCASE = 'd';
+	private static final char CHAR_ASCENDING_LOWERCASE = 'a';
 
 	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
@@ -215,7 +217,7 @@ public class QLLogic {
 			return _workingList;
 		}
 		
-		String fieldLine= fieldLineWithName.replaceFirst(taskName, "").trim();
+		String fieldLine= fieldLineWithName.replaceFirst(taskName, STRING_NO_CHAR).trim();
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		
 		Task newTask = new Task(taskName);
@@ -241,7 +243,7 @@ public class QLLogic {
 			taskNumber = Integer.parseInt(taskNumberString);
 		}
 		
-		String fieldLine= fieldLineWithTaskNumber.replaceFirst(String.valueOf(taskNumber), "").trim();
+		String fieldLine= fieldLineWithTaskNumber.replaceFirst(String.valueOf(taskNumber), STRING_NO_CHAR).trim();
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		
 		Task taskToEdit = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
@@ -330,7 +332,7 @@ public class QLLogic {
 			break;
 			
 		case 'l':
-			filterByPeriod(fieldCriteria, feedback);
+			filterByDuration(fieldCriteria, feedback);
 			break;
 			
 		case 'p':
@@ -408,7 +410,8 @@ public class QLLogic {
 			copyList(bufferList, _workingList);
 		}
 	}
-	private static void filterByPeriod(String fieldCriteria, StringBuilder feedback) {
+	
+	private static void filterByDuration(String fieldCriteria, StringBuilder feedback) {
 		if(fieldCriteria.equals(STRING_NO_CHAR)) {
 			feedback.append(MESSAGE_NO_DATE_ENTERED);
 			return;
@@ -611,27 +614,34 @@ public class QLLogic {
 		for(int i = sortingCriteria.size() - 1; i >= 0; i--) {
 			char criterionType = sortingCriteria.get(i)[0];
 			char criterionOrder = sortingCriteria.get(i)[1];
-			switch(criterionType) {
-			case 'd':
-				sortByDate(criterionOrder, feedback);
-				break;
+			if(criterionOrder == CHAR_ASCENDING_LOWERCASE || 
+					criterionOrder == CHAR_ASCENDING_UPPERCASE || 
+					criterionOrder == CHAR_DESCENDING_LOWERCASE || 
+					criterionOrder == CHAR_DESCENDING_UPPERCASE) {
+				switch(criterionType) {
+				case 'd':
+					sortByDate(criterionOrder, feedback);
+					break;
+					
+				case 'p':
+					sortByPriority(criterionOrder, feedback);
+					break;
 				
-			case 'p':
-				sortByPriority(criterionOrder, feedback);
-				break;
-			
-			case 'l':
-				sortByDuration(criterionOrder, feedback);
-				break;
-				
-			default:
-				feedback.append(String.format(MESSAGE_INVALID_SORTING_CRITERIA_TYPE, criterionType)).append(STRING_NEW_LINE);
-				break;
+				case 'l':
+					sortByDurationLength(criterionOrder, feedback);
+					break;
+					
+				default:
+					feedback.append(String.format(MESSAGE_INVALID_SORTING_CRITERIA_TYPE, criterionType)).append(STRING_NEW_LINE);
+					break;
+				}
+			} else {
+				feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, criterionOrder)).append(STRING_NEW_LINE);
 			}
 		}
 	}
 
-	private static void sortByDuration(char order, StringBuilder feedback) {
+	private static void sortByDurationLength(char order, StringBuilder feedback) {
 		LinkedList<Task> tasksWithNoDuration = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++){
 			if(_workingList.get(i).getDuration() == -1) {
@@ -647,7 +657,8 @@ public class QLLogic {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
 				switch (order) {
-				case CHAR_ASCENDING:
+				case CHAR_ASCENDING_LOWERCASE:
+				case CHAR_ASCENDING_UPPERCASE:
 					if(taskLeft.getDuration() > taskRight.getDuration()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
@@ -655,16 +666,14 @@ public class QLLogic {
 					}
 					break;
 				
-				case CHAR_DESCENDING:
+				case CHAR_DESCENDING_LOWERCASE:
+				case CHAR_DESCENDING_UPPERCASE:
 					if(taskLeft.getDuration() < taskRight.getDuration()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
-				default:
-					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
-					return;
 				}
 			}
 			if(isSorted) {
@@ -692,7 +701,8 @@ public class QLLogic {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
 				switch (order) {
-				case CHAR_ASCENDING:
+				case CHAR_ASCENDING_LOWERCASE:
+				case CHAR_ASCENDING_UPPERCASE:
 					if(taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
@@ -700,16 +710,14 @@ public class QLLogic {
 					}
 					break;
 				
-				case CHAR_DESCENDING:
+				case CHAR_DESCENDING_LOWERCASE:
+				case CHAR_DESCENDING_UPPERCASE:
 					if(taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
-				default:
-					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
-					return;
 				}
 			}
 			if(isSorted) {
@@ -736,7 +744,8 @@ public class QLLogic {
 				Task taskLeft = _workingList.get(j);
 				Task taskRight = _workingList.get(j + 1);
 				switch (order) {
-				case CHAR_ASCENDING:
+				case CHAR_ASCENDING_LOWERCASE:
+				case CHAR_ASCENDING_UPPERCASE:
 					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) > 0 ) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
@@ -744,17 +753,14 @@ public class QLLogic {
 					}
 					break;
 				
-				case CHAR_DESCENDING:
+				case CHAR_DESCENDING_LOWERCASE:
+				case CHAR_DESCENDING_UPPERCASE:
 					if(taskLeft.getDueDate().compareTo(taskRight.getDueDate()) < 0) {
 						_workingList.set(j + 1, taskLeft);
 						_workingList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
-					
-				default:
-					feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, order)).append(STRING_NEW_LINE);
-					return;
 				}
 			}
 			if(isSorted) {
