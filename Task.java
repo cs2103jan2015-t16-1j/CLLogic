@@ -25,14 +25,14 @@ public class Task {
 	private Calendar _startDate; 
 	private Calendar _dueDate; 
 	private boolean _isCompleted;
-	private boolean _isDue;
+	private boolean _isOverdue;
 	private boolean _shouldSync;
 	
 	/* Constructors */
 	public Task(String name) {
 		_name = new String(name);
 		_isCompleted = false;
-		_isDue = false;
+		_isOverdue = false;
 	}
 	
 	/* Mutators */
@@ -71,7 +71,7 @@ public class Task {
 		
 		_dueDate = new GregorianCalendar(dueYear, dueMonth + OFFSET_CALENDAR_MONTH, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
 		
-		updateIsDue();
+		updateIsOverdue();
 	}
 	
 	public void setCompleted() {
@@ -82,13 +82,16 @@ public class Task {
 		_isCompleted = false;
 	}
 	
-	public void updateIsDue() {
+	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
-		if(_dueDate == null || today.compareTo(_dueDate) < 0) {
-			_isDue = false;
+		today.set(Calendar.HOUR, NUM_0_HOUR);
+		today.set(Calendar.MINUTE, NUM_0_MIN);
+		today.set(Calendar.SECOND, NUM_0_SEC);
+		if(_dueDate == null || _dueDate.compareTo(today) > 0) {
+			_isOverdue = false;
 		}
 		else {
-			_isDue = true;
+			_isOverdue = true;
 		}
 	}
 	
@@ -151,9 +154,9 @@ public class Task {
 		return _isCompleted;
 	}
 	
-	public boolean getIsDue() {
-		updateIsDue();
-		return _isDue;
+	public boolean getIsOverdue() {
+		updateIsOverdue();
+		return _isOverdue;
 	}
 	
 	public boolean getShouldSync() {

@@ -185,7 +185,7 @@ public class QLLogic {
 	
 	public static void updateOverdue() {
 		for(int i = 0; i < _workingList.size(); i++) {
-			_workingList.get(i).updateIsDue();
+			_workingList.get(i).updateIsOverdue();
 		}
 	}
 	
@@ -352,8 +352,8 @@ public class QLLogic {
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
 				Task currentTask = _workingList.get(i);
-				if((currentTask.getIsDue() && fieldCriteria.equals(STRING_YES))
-						|| (!currentTask.getIsDue() && fieldCriteria.equals(STRING_NO))) {
+				if((currentTask.getIsOverdue() && fieldCriteria.equalsIgnoreCase(STRING_YES))
+						|| (!currentTask.getIsOverdue() && fieldCriteria.equalsIgnoreCase(STRING_NO))) {
 					bufferList.add(currentTask);
 				} 
 			}
@@ -366,8 +366,8 @@ public class QLLogic {
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
 				Task currentTask = _workingList.get(i);
-				if((currentTask.getIsCompleted() && fieldCriteria.equals(STRING_YES))
-						|| (!currentTask.getIsCompleted() && fieldCriteria.equals(STRING_NO))) {
+				if((currentTask.getIsCompleted() && fieldCriteria.equalsIgnoreCase(STRING_YES))
+						|| (!currentTask.getIsCompleted() && fieldCriteria.equalsIgnoreCase(STRING_NO))) {
 					bufferList.add(currentTask);
 				} 
 			}
@@ -677,6 +677,8 @@ public class QLLogic {
 		executeCommand("f -o Y", feedback);
 		displayStub(feedback);
 		recover();
+		
+		/*
 		executeCommand("c 1", feedback);
 		executeCommand("c 2", feedback);
 		executeCommand("f -c N", feedback);
@@ -693,6 +695,7 @@ public class QLLogic {
 		executeCommand("f -n four", feedback);
 		displayStub(feedback);
 		recover();
+		*/
 		
 		/*
 		executeCommand("l -d 1502", feedback);
