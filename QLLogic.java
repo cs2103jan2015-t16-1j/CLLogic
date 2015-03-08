@@ -9,6 +9,7 @@ public class QLLogic {
 	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
 	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
 	private static final String MESSAGE_NO_DATE_ENTERED = "No date entered.";
+	private static final String MESSAGE_NO_NAME_ENTERED = "No task date entered.";
 	private static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\".";
 	private static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed.";
 	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed.";
@@ -40,8 +41,6 @@ public class QLLogic {
 	private static final String COMMAND_DELETE = "delete";
 	private static final String COMMAND_COMPLETE_ABBREV = "c";
 	private static final String COMMAND_COMPLETE = "complete";
-	private static final String COMMAND_LIST_ABBREV = "l";
-	private static final String COMMAND_LIST = "list";
 	
 	private static final String STRING_NO_CHAR = "";
 	private static final String STRING_BLANK_SPACE = " ";
@@ -61,7 +60,6 @@ public class QLLogic {
 	public static LinkedList<Task> setup(String fileName) {
 		_fileName = fileName; 
 		_workingList = QLStorage.loadFile(fileName);
-		sortByDate(CHAR_ASCENDING, new StringBuilder());
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
 		return _workingList;
@@ -125,8 +123,6 @@ public class QLLogic {
 			return executeDelete(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_COMPLETE) || command.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
 			return executeComplete(fieldLine, feedback);
-		} else if(command.equalsIgnoreCase(COMMAND_LIST) || command.equalsIgnoreCase(COMMAND_LIST_ABBREV)) {
-			return executeList(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_SORT) || command.equalsIgnoreCase(COMMAND_SORT_ABBREV)) {
 			return executeSort(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_FIND) || command.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
@@ -183,7 +179,7 @@ public class QLLogic {
 
 	private static void updatePriority(Task task, StringBuilder feedback, String fieldContent) {
 		if(CommandParser.isValidPriorityLevel(fieldContent, feedback)) {
-			task.setPriority(fieldContent.charAt(INDEX_PRIORITY_LEVEL));
+			task.setPriority(fieldContent.substring(INDEX_PRIORITY_LEVEL, INDEX_PRIORITY_LEVEL + 1));
 		}
 	}
 	
@@ -294,8 +290,8 @@ public class QLLogic {
 		}
 	}
 	
-	/** List methods **/
-	private static LinkedList<Task> executeList(String fieldLine, StringBuilder feedback) {
+	/** Find methods **/
+	private static LinkedList<Task> executeFind(String fieldLine, StringBuilder feedback) {
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		LinkedList<Task> workingListBackUp = new LinkedList<Task>();
 		copyList(_workingList, workingListBackUp);
@@ -331,11 +327,24 @@ public class QLLogic {
 		case 'o':
 			filterByOverdueStatus(fieldCriteria, feedback);
 			break;
+		
+		case 'n':
+			filterByName(fieldCriteria, feedback);
+			break;
 				
 		default: 
 			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append(STRING_NEW_LINE);
 			break;
 		}
+	}
+
+	private static void filterByName(String fieldCriteria, StringBuilder feedback) {
+		if(fieldCriteria.equals(STRING_NO_CHAR)) {
+			feedback.append(MESSAGE_NO_NAME_ENTERED);
+			return;
+		}
+		String keywords[] = fieldCriteria.split(STRING_BLANK_SPACE);
+		findTasksMatchKeywords(keywords, feedback);
 	}
 
 	private static void filterByOverdueStatus(String fieldCriteria, StringBuilder feedback) {
@@ -368,11 +377,14 @@ public class QLLogic {
 	
 	private static void filterByPriority(String fieldCriteria, StringBuilder feedback) {
 		if(CommandParser.isValidPriorityLevel(fieldCriteria, feedback)) {
-			char priorityLevel = fieldCriteria.charAt(INDEX_PRIORITY_LEVEL);
+			String priorityLevel = fieldCriteria.substring(INDEX_PRIORITY_LEVEL, INDEX_PRIORITY_LEVEL + 1);
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
 				Task currentTask = _workingList.get(i);
-				if(currentTask.getPriority() == priorityLevel) {
+				if(currentTask.getPriority() == null) {
+					break;
+				}
+				if(currentTask.getPriority().equalsIgnoreCase(priorityLevel)) {
 					bufferList.add(currentTask);
 				} 
 			}
@@ -451,6 +463,65 @@ public class QLLogic {
 		copyList(bufferList, _workingList);
 	}
 	
+	private static void findTasksMatchKeywords(String[] keywords, StringBuilder feedback) {
+		LinkedList<Object[]> foundTasksWithMatchScore = new LinkedList<Object[]>();
+		for(int i = 0; i < _workingList.size(); i++) {
+			Task currentTask = _workingList.get(i);
+			int matchScore = 0;
+			for(int j = 0; j < keywords.length; j++) {
+				String currentKeyword = keywords[j].trim();
+				matchScore = matchKeywordsStore(currentTask, currentKeyword);
+			}
+			if(matchScore != 0) {
+				foundTasksWithMatchScore.add(new Object[]{currentTask, Integer.valueOf(matchScore)});
+			}
+		}
+		if(foundTasksWithMatchScore.isEmpty()) {
+			feedback.append(MESSAGE_NO_TASK_MATCHES_KEYWORD);
+			return;
+		}
+		_workingList = sortFoundTasksByMatchScore(foundTasksWithMatchScore);
+	}
+
+	private static LinkedList<Task> sortFoundTasksByMatchScore(LinkedList<Object[]> foundTasksWithMatchScore) {
+		for(int i = foundTasksWithMatchScore.size() - 1; i >= 0; i--) {
+			boolean isSorted = true;
+			for(int j = 0; j < i; j++) {
+				Object[] taskLeft = foundTasksWithMatchScore.get(j);
+				Object[] taskRight = foundTasksWithMatchScore.get(j + 1);
+				if((int)taskLeft[1] < (int)taskRight[1]) {
+					foundTasksWithMatchScore.set(j + 1, taskLeft);
+					foundTasksWithMatchScore.set(j, taskRight);
+					isSorted = false;
+				}
+			}
+			if(isSorted) {
+				break;
+			}
+		}
+		LinkedList<Task> newWorkingList = new LinkedList<Task>();
+		for(int i = 0; i < foundTasksWithMatchScore.size(); i++) {
+			Task taskToAdd = (Task)foundTasksWithMatchScore.get(i)[0];
+			newWorkingList.add(taskToAdd);
+		}
+		return newWorkingList;
+	}
+
+	private static int matchKeywordsStore(Task currentTask, String currentKeyword) {
+		String[] taskNameWords = currentTask.getName().split(STRING_BLANK_SPACE);
+		int totalScore = 0;
+		for(int i = 0; i < taskNameWords.length; i++) {
+			String currentTaskNameWord = taskNameWords[i].trim();
+			if(currentTaskNameWord.contains(currentKeyword)) {
+				totalScore++;
+			}
+			if(currentTaskNameWord.equals(currentKeyword)) {
+				totalScore ++;
+			}
+		}
+		return totalScore;
+	}
+	
 	/** Sort methods **/
 	private static LinkedList<Task> executeSort(String fieldLine, StringBuilder feedback) {
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
@@ -487,7 +558,7 @@ public class QLLogic {
 	private static void sortByPriority(char order, StringBuilder feedback) {
 		LinkedList<Task> tasksWithNoPriority = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++){
-			if(_workingList.get(i).getPriority() == 0) {
+			if(_workingList.get(i).getPriorityInt() == 0) {
 				Task removedTask = _workingList.remove(i); 
 				tasksWithNoPriority.add(removedTask);
 				i--;
@@ -573,70 +644,6 @@ public class QLLogic {
 		_workingList = tasksWithNoDueDate;
 	}
 
-	/** Find method **/
-	private static LinkedList<Task> executeFind(String fieldLine, StringBuilder feedback) {
-		if(fieldLine.equals(STRING_NO_CHAR)) {
-			return _workingList;
-		}
-		String keywords[] = fieldLine.split(STRING_BLANK_SPACE);
-		findTasks(keywords, feedback);
-		return _workingList;
-	}
-	
-	private static void findTasks(String[] keywords, StringBuilder feedback) {
-		LinkedList<Object[]> foundTasksWithFoundCount = new LinkedList<Object[]>();
-		for(int i = 0; i < _workingList.size(); i++) {
-			Task currentTask = _workingList.get(i);
-			int foundCount = 0;
-			for(int j = 0; j < keywords.length; j++) {
-				String currentKeyword = keywords[j];
-				if(containsKeyword(currentTask, currentKeyword)){
-					foundCount++;
-				}
-			}
-			if(foundCount != 0) {
-				foundTasksWithFoundCount.add(new Object[]{currentTask, Integer.valueOf(foundCount)});
-			}
-		}
-		if(foundTasksWithFoundCount.isEmpty()) {
-			feedback.append(MESSAGE_NO_TASK_MATCHES_KEYWORD);
-			return;
-		}
-		_workingList = sortFoundTasksByFoundCount(foundTasksWithFoundCount);
-	}
-
-	private static LinkedList<Task> sortFoundTasksByFoundCount(LinkedList<Object[]> foundTasksWithFoundCount) {
-		for(int i = foundTasksWithFoundCount.size() - 1; i >= 0; i--) {
-			boolean isSorted = true;
-			for(int j = 0; j < i; j++) {
-				Object[] taskWithCountLeft = foundTasksWithFoundCount.get(j);
-				Object[] taskWithCountRight = foundTasksWithFoundCount.get(j + 1);
-				if((int)taskWithCountLeft[1] < (int)taskWithCountRight[1]) {
-					foundTasksWithFoundCount.set(j + 1, taskWithCountLeft);
-					foundTasksWithFoundCount.set(j, taskWithCountRight);
-					isSorted = false;
-				}
-			}
-			if(isSorted) {
-				break;
-			}
-		}
-		LinkedList<Task> newWorkingList = new LinkedList<Task>();
-		for(int i = 0; i < foundTasksWithFoundCount.size(); i++) {
-			Task taskToAdd = (Task)foundTasksWithFoundCount.get(i)[0];
-			newWorkingList.add(taskToAdd);
-		}
-		return newWorkingList;
-	}
-
-	private static boolean containsKeyword(Task currentTask, String currentKeyword) {
-		if(currentTask.getName().contains(currentKeyword)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	/** Main method **/
 	public static void main(String args[]) {
 		setupStub();
@@ -647,41 +654,45 @@ public class QLLogic {
 		executeCommand("add task three -d 0902 -p H", feedback);
 		executeCommand("add task foura -d 1502 -p L", feedback);
 		executeCommand("add task fourb -d 0904 -p L", feedback);
+		executeCommand("add task four -d 1502 -p M", feedback);
+		executeCommand("add task four four -d 1602 -p M", feedback);
 		executeCommand("add task five -d 0904 -p L", feedback);
 		executeCommand("add task six -p L", feedback);
 		executeCommand("add task seven -p H", feedback);
 		executeCommand("add task eight", feedback);
 		executeCommand("add task nine -d TDY", feedback);
 		
-		executeCommand("l -d 1502", feedback);
+		executeCommand("f -d 1502", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -d 0902:1502", feedback);
+		executeCommand("f -d 0902:1502", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -p L", feedback);
+		executeCommand("f -p L", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -o N", feedback);
+		executeCommand("f -o N", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -o Y", feedback);
+		executeCommand("f -o Y", feedback);
 		displayStub(feedback);
 		recover();
 		executeCommand("c 1", feedback);
 		executeCommand("c 2", feedback);
-		executeCommand("l -c N", feedback);
+		executeCommand("f -c N", feedback);
 		displayStub(feedback);
 		executeCommand("s -d a -p d", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -c Y", feedback);
+		executeCommand("f -c Y", feedback);
 		displayStub(feedback);
 		recover();
-		executeCommand("l -d TMR", feedback);
+		executeCommand("f -d TMR", feedback);
 		displayStub(feedback);
 		recover();
-		
+		executeCommand("f -n four", feedback);
+		displayStub(feedback);
+		recover();
 		
 		/*
 		executeCommand("l -d 1502", feedback);

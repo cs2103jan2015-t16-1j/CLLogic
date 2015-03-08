@@ -4,9 +4,9 @@ import java.util.GregorianCalendar;
 
 public class Task {
 	
-	private static final char CHAR_PRIORITY_HIGH = 'H';
-	private static final char CHAR_PRIORITY_MEDIUM = 'M';
-	private static final char CHAR_PRIORITY_LOW = 'L';
+	private static final String STRING_PRIORITY_HIGH = "H";
+	private static final String STRING_PRIORITY_MEDIUM = "M";
+	private static final String STRING_PRIORITY_LOW = "L";
 	private static final int OFFSET_CALENDAR_MONTH = -1;
 	
 	private static final int NUM_0_SEC = 0;
@@ -21,7 +21,7 @@ public class Task {
 	
 	private String _name; 
 	private String _description;
-	private char _priority;
+	private String _priority;
 	private Calendar _startDate; 
 	private Calendar _dueDate; 
 	private boolean _isCompleted;
@@ -44,19 +44,11 @@ public class Task {
 		_description = new String(description);
 	}
 	
-	public void setPriority(char priority) {
-		switch (priority) {
-		case 'L': 
-			_priority = CHAR_PRIORITY_LOW;
-			break;
-		case 'M': 
-			_priority = CHAR_PRIORITY_MEDIUM;
-			break;
-		case 'H': 
-			_priority = CHAR_PRIORITY_HIGH;
-			break;
-		default: 
-			break;
+	public void setPriority(String priority) {
+		if(priority.equalsIgnoreCase(STRING_PRIORITY_LOW) ||
+				priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM) ||
+				priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+			_priority = priority;
 		}
 	}
 	
@@ -117,21 +109,24 @@ public class Task {
 		return _description;
 	}
 	
-	public char getPriority() {
+	public String getPriority() {
 		return _priority;
 	}
 	
 	public int getPriorityInt() {
-		switch(_priority) {
-		case 'L':
-			return NUM_PRIORITY_LOW;
-		case 'M':
-			return NUM_PRIORITY_MEDIUM;
-		case 'H':
-			return NUM_PRIORITY_HIGH;
-		default:
+		if(_priority == null) {
 			return 0;
 		}
+		if(_priority.equals(STRING_PRIORITY_LOW)) {
+			return NUM_PRIORITY_LOW;
+		}
+		if(_priority.equals(STRING_PRIORITY_MEDIUM)) {
+			return NUM_PRIORITY_MEDIUM;
+		}
+		if(_priority.equals(STRING_PRIORITY_HIGH)) {
+			return NUM_PRIORITY_HIGH;
+		}
+		return 0;
 	}
 	
 	public Calendar getStartDate() {
