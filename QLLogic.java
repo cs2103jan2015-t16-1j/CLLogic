@@ -1,7 +1,6 @@
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -873,89 +872,6 @@ public class QLLogic {
 			executeCommand(command, feedback);
 			displayStub(feedback);
 		}
-	
-		/*
-		 executeCommand("add task two  -d 1502 -p M", feedback);
-		executeCommand("add task three -d 0902 -p H", feedback);
-		executeCommand("add task foura -d 1502 -p L", feedback);
-		executeCommand("add task fourb -d 0904 -p L", feedback);
-		executeCommand("add task four -d 1502 -p M", feedback);
-		executeCommand("add task four four -d 1602 -p M", feedback);
-		executeCommand("add task five -d 0904 -p L", feedback);
-		executeCommand("add task six -p L", feedback);
-		executeCommand("add task seven -p H", feedback);
-		executeCommand("add task eight", feedback);
-		executeCommand("add task nine -s 0503 -d 2003", feedback);
-		executeCommand("add task ten -s TDY -d 1903", feedback);
-		executeCommand("add task eleven -s 0403 -d 0803", feedback);
-		executeCommand("add task twelve -s 01012015 -d 01012016", feedback);
-		*/
-		
-		/*
-		executeCommand("f -d 1502", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -d 0902:1502", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -p L", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -o N", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -o Y", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -s 0803", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -s 0803:0803", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -s 0603:0903 -d 1803:2103", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -o Y", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -l 0403:2003", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("s -l a", feedback);
-		displayStub(feedback);
-		recover();
-		*/
-	
-		/*
-		executeCommand("c 1", feedback);
-		executeCommand("c 2", feedback);
-		executeCommand("f -c N", feedback);
-		displayStub(feedback);
-		executeCommand("s -d a -p d", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -c Y", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -d TMR", feedback);
-		displayStub(feedback);
-		recover();
-		executeCommand("f -n four", feedback);
-		displayStub(feedback);
-		recover();
-		*/
-		
-		/*
-		executeCommand("l -d 1502", feedback);
-		displayStub(feedback);
-		executeCommand("e 2 -n task 2", feedback);
-		displayStub(feedback);
-		executeCommand("add play -d 0803 -p L", feedback);
-		displayStub(feedback);
-		executeCommand("delete 3 ", feedback);
-		displayStub(feedback);
-		*/
 	}
 	
 }
