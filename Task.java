@@ -32,7 +32,6 @@ public class Task {
 	public Task(String name) {
 		_name = new String(name);
 		_isCompleted = false;
-		_isOverdue = false;
 	}
 	
 	/* Mutators */
@@ -41,7 +40,7 @@ public class Task {
 	}
 	
 	public void setDescription(String description) {
-		_description = new String(description);
+		_description = description;
 	}
 	
 	public void setPriority(String priority) {
@@ -82,6 +81,19 @@ public class Task {
 		updateIsOverdue();
 	}
 	
+	public void setStartDate(Calendar startDate) {
+		_startDate = startDate;
+	}
+	
+	public void setDueDate(Calendar dueDate) {
+		_dueDate = dueDate;
+		updateIsOverdue();
+	}
+	
+	public void setIsCompleted(boolean isCompleted) {
+		_isCompleted = isCompleted;
+	}
+	
 	public void setCompleted() {
 		_isCompleted = true;
 	}
@@ -92,11 +104,6 @@ public class Task {
 	
 	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
-		/*
-		today.set(Calendar.HOUR, NUM_0_HOUR);
-		today.set(Calendar.MINUTE, NUM_0_MIN);
-		today.set(Calendar.SECOND, NUM_0_SEC);
-		*/
 		if(_dueDate == null || _dueDate.compareTo(today) > 0) {
 			_isOverdue = false;
 		}
@@ -112,7 +119,11 @@ public class Task {
 	public void setShouldNotSync() {
 		_shouldSync = false;
 	}
-
+	
+	public void setIsShouldSync(boolean shouldSync) {
+		_shouldSync = shouldSync;
+	}
+	
 	/* Accessors */
 	public String getName() {
 		return _name;
@@ -189,5 +200,38 @@ public class Task {
 			duration++;
 		}
 		return duration; 
+	}
+	
+	/* Other methods */
+	
+	public Task clone() {
+		Task clonedTask = new Task(_name);
+		if(_startDate == null) {
+			clonedTask.setStartDate((Calendar)null);
+		} else {
+			Calendar startdate = new GregorianCalendar(_startDate.get(Calendar.YEAR),
+					_startDate.get(Calendar.MONTH), 
+					_startDate.get(Calendar.DAY_OF_MONTH),
+					_startDate.get(Calendar.HOUR_OF_DAY),
+					_startDate.get(Calendar.MINUTE),
+					_startDate.get(Calendar.SECOND));
+			clonedTask.setStartDate(startdate);
+		}
+		if(_dueDate == null) {
+			clonedTask.setStartDate((Calendar)null);
+		} else {
+			Calendar dueDate = new GregorianCalendar(_dueDate.get(Calendar.YEAR),
+					_dueDate.get(Calendar.MONTH), 
+					_dueDate.get(Calendar.DAY_OF_MONTH),
+					_dueDate.get(Calendar.HOUR_OF_DAY),
+					_dueDate.get(Calendar.MINUTE),
+					_dueDate.get(Calendar.SECOND));
+			clonedTask.setDueDate(dueDate);
+		}
+		clonedTask.setDescription(_description);
+		clonedTask.setIsCompleted(_isCompleted);
+		clonedTask.setPriority(_priority);
+		clonedTask.setIsShouldSync(_shouldSync);
+		return clonedTask;
 	}
 }

@@ -1,6 +1,8 @@
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
 public class QLLogic {
 
@@ -59,18 +61,20 @@ public class QLLogic {
 	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
 	private static LinkedList<Task> _workingListMaster;
-	private static LinkedList<LinkedList<Task>> _undoStack;
-	private static LinkedList<LinkedList<Task>> _redoStack;
+	private static Stack<LinkedList<Task>> _undoStack;
+	private static Stack<LinkedList<Task>> _redoStack;
 	private static String _fileName;
 	
 	/** General methods **/
 	public static LinkedList<Task> setup(String fileName) {
 		_fileName = fileName; 
-		_undoStack = new LinkedList<LinkedList<Task>>();
-		_redoStack = new LinkedList<LinkedList<Task>>();
+		_undoStack = new Stack<LinkedList<Task>>();
+		_redoStack = new Stack<LinkedList<Task>>();
 		_workingList = QLStorage.loadFile(fileName);
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
+		_undoStack.push(_workingListMaster);
+		_undoStack.push(_workingList);
 		return _workingList;
 	}
 	
@@ -80,11 +84,12 @@ public class QLLogic {
 	
 	// Stub
 	public static void setupStub() {
-		_undoStack = new LinkedList<LinkedList<Task>>();
-		_redoStack = new LinkedList<LinkedList<Task>>();
+		_undoStack = new Stack<LinkedList<Task>>();
+		_redoStack = new Stack<LinkedList<Task>>();
 		_workingList = new LinkedList<Task>();
 		_workingListMaster = new LinkedList<Task>();
-		copyList(_workingList, _workingListMaster);
+		_undoStack.push(new LinkedList<Task>());
+		_undoStack.push(new LinkedList<Task>());
 	}
 	
 	// Stub
@@ -103,7 +108,7 @@ public class QLLogic {
 			System.out.println();
 		}
 		
-		/*
+		
 		System.out.println("	workingListMaster: ");
 		for(int i = 0; i < _workingListMaster.size(); i++) {
 			System.out.print(_workingListMaster.get(i).getName() + " ");
@@ -115,7 +120,7 @@ public class QLLogic {
 			} catch(NullPointerException e) {}
 			System.out.println();
 		}
-		*/
+		
 		System.out.println();
 		feedback.setLength(0);
 	}
@@ -162,23 +167,39 @@ public class QLLogic {
 			toList.add(fromList.get(i));
 	}
 	
-	private static void updateUndoStack() {
-		_undoStack.push(_workingListMaster);
-		_undoStack.push(_workingList);
-		_redoStack.clear();
+	
+	private static void copyListWithClone(LinkedList<Task> fromList, LinkedList<Task> toList) {
+		toList.clear();
+		for(int i = 0; i < fromList.size(); i++) {
+			toList.add(fromList.get(i).clone());
+		}
 	}
 	
+	private static void updateUndoStack() {
+		LinkedList<Task> workingListMaster = new LinkedList<Task>();
+		LinkedList<Task> workingList = new LinkedList<Task>();
+		copyListWithClone(_workingListMaster, workingListMaster);
+		copyListWithClone(_workingList, workingList);
+		try {
+			System.out.println(_undoStack.peek().getLast().getDueDateString());
+		} catch (NoSuchElementException e) {}
+		_undoStack.push(workingListMaster);
+		_undoStack.push(workingList);
+		_redoStack.clear();
+	}
+
+
 	private static void undo(StringBuilder feedback) {
-		if(_undoStack.isEmpty()) {
+		if(_undoStack.size() == 2) {
 			feedback.append(MESSAGE_NOTHING_TO_UNDO);
 			return;
 		}
-		LinkedList<Task> previousWorkingList = _undoStack.pop();
-		LinkedList<Task> previousWorkingListMaster = _undoStack.pop();
-		_redoStack.push(previousWorkingListMaster);
-		_redoStack.push(previousWorkingList);
-		_workingList = previousWorkingList; 
-		_workingListMaster = previousWorkingListMaster; 
+		_redoStack.push(_undoStack.pop());
+		_redoStack.push(_undoStack.pop());
+		
+		copyListWithClone(_undoStack.peek(), _workingList);
+		copyListWithClone(_undoStack.peek(), _workingListMaster);
+		
 		QLStorage.saveFile(_workingListMaster, _fileName);
 	}
 	
@@ -187,12 +208,13 @@ public class QLLogic {
 			feedback.append(MESSAGE_NOTHING_TO_REDO);
 			return;
 		}
-		LinkedList<Task> nextWorkingList = _redoStack.pop();
-		LinkedList<Task> nextWorkingListMaster = _redoStack.pop();
-		_undoStack.push(nextWorkingListMaster);
-		_undoStack.push(nextWorkingList);
-		_workingList = nextWorkingList; 
-		_workingListMaster = nextWorkingListMaster; 
+		
+		_undoStack.push(_redoStack.pop());
+		_undoStack.push(_redoStack.pop());
+		
+		copyListWithClone(_undoStack.peek(), _workingList);
+		copyListWithClone(_undoStack.peek(), _workingListMaster);
+		
 		QLStorage.saveFile(_workingListMaster, _fileName);
 	}
 	
@@ -832,7 +854,33 @@ public class QLLogic {
 		StringBuilder feedback =  new StringBuilder();
 		
 		executeCommand("add task one -p L -d 1502", feedback);
-		executeCommand("add task two  -d 1502 -p M", feedback);
+		displayStub(feedback);
+		executeCommand("u", feedback);
+		displayStub(feedback);
+		executeCommand("u", feedback);
+		displayStub(feedback);
+		executeCommand("r", feedback);
+		displayStub(feedback);
+		executeCommand("r", feedback);
+		displayStub(feedback);
+		executeCommand("e 1 -p M -d 1602", feedback);
+		displayStub(feedback);
+		executeCommand("u", feedback);
+		displayStub(feedback);
+		executeCommand("a task two -p H -d 0907", feedback);
+		displayStub(feedback);
+		executeCommand("r", feedback);
+		displayStub(feedback);
+		executeCommand("f -p L", feedback);
+		displayStub(feedback);
+		executeCommand("d 1", feedback);
+		displayStub(feedback);
+		executeCommand("u", feedback);
+		displayStub(feedback);
+		
+		
+		/*
+		 executeCommand("add task two  -d 1502 -p M", feedback);
 		executeCommand("add task three -d 0902 -p H", feedback);
 		executeCommand("add task foura -d 1502 -p L", feedback);
 		executeCommand("add task fourb -d 0904 -p L", feedback);
@@ -846,14 +894,7 @@ public class QLLogic {
 		executeCommand("add task ten -s TDY -d 1903", feedback);
 		executeCommand("add task eleven -s 0403 -d 0803", feedback);
 		executeCommand("add task twelve -s 01012015 -d 01012016", feedback);
-		
-		executeCommand("a task thirteen -d 1502", feedback);
-		displayStub(feedback);
-		executeCommand("u", feedback);
-		displayStub(feedback);
-		executeCommand("r", feedback);
-		displayStub(feedback);
-		
+		*/
 		
 		/*
 		executeCommand("f -d 1502", feedback);
