@@ -44,6 +44,9 @@ public class Task {
 	}
 	
 	public void setPriority(String priority) {
+		if(priority == null) {
+			return;
+		}
 		if(priority.equalsIgnoreCase(STRING_PRIORITY_LOW) ||
 				priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM) ||
 				priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {

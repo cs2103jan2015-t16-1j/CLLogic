@@ -2,7 +2,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Scanner;
 import java.util.Stack;
+
 
 public class QLLogic {
 
@@ -168,21 +170,27 @@ public class QLLogic {
 	}
 	
 	
-	private static void copyListWithClone(LinkedList<Task> fromList, LinkedList<Task> toList) {
-		toList.clear();
-		for(int i = 0; i < fromList.size(); i++) {
-			toList.add(fromList.get(i).clone());
+	private static void copyListsForUndoStack(LinkedList<Task> list, LinkedList<Task> listMaster,
+			LinkedList<Task> listNew, LinkedList<Task> listMasterNew) {
+		LinkedList<Integer> indexesInListMasterForRepeatTask = new LinkedList<Integer>();
+		for(int i = 0; i < list.size(); i++) {
+			indexesInListMasterForRepeatTask.add(listMaster.indexOf(list.get(i)));
+		}
+		for(int i = 0; i < listMaster.size(); i++) {
+			listMasterNew.add(listMaster.get(i).clone());
+		}
+		
+		for(int i = 0; i < indexesInListMasterForRepeatTask.size(); i++) {
+			listNew.add(listMasterNew.get(indexesInListMasterForRepeatTask.get(i)));
 		}
 	}
 	
 	private static void updateUndoStack() {
 		LinkedList<Task> workingListMaster = new LinkedList<Task>();
 		LinkedList<Task> workingList = new LinkedList<Task>();
-		copyListWithClone(_workingListMaster, workingListMaster);
-		copyListWithClone(_workingList, workingList);
-		try {
-			System.out.println(_undoStack.peek().getLast().getDueDateString());
-		} catch (NoSuchElementException e) {}
+		copyListsForUndoStack(_workingList, _workingListMaster,
+				workingList, workingListMaster);
+		
 		_undoStack.push(workingListMaster);
 		_undoStack.push(workingList);
 		_redoStack.clear();
@@ -197,8 +205,11 @@ public class QLLogic {
 		_redoStack.push(_undoStack.pop());
 		_redoStack.push(_undoStack.pop());
 		
-		copyListWithClone(_undoStack.peek(), _workingList);
-		copyListWithClone(_undoStack.peek(), _workingListMaster);
+		_workingList = _undoStack.pop();
+		_workingListMaster = _undoStack.pop();
+		
+		_undoStack.push(_workingListMaster);
+		_undoStack.push(_workingList);
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
 	}
@@ -212,8 +223,11 @@ public class QLLogic {
 		_undoStack.push(_redoStack.pop());
 		_undoStack.push(_redoStack.pop());
 		
-		copyListWithClone(_undoStack.peek(), _workingList);
-		copyListWithClone(_undoStack.peek(), _workingListMaster);
+		_workingList = _undoStack.pop();
+		_workingListMaster = _undoStack.pop();
+		
+		_undoStack.push(_workingListMaster);
+		_undoStack.push(_workingList);
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
 	}
@@ -852,33 +866,14 @@ public class QLLogic {
 	public static void main(String args[]) {
 		setupStub();
 		StringBuilder feedback =  new StringBuilder();
-		
-		executeCommand("add task one -p L -d 1502", feedback);
-		displayStub(feedback);
-		executeCommand("u", feedback);
-		displayStub(feedback);
-		executeCommand("u", feedback);
-		displayStub(feedback);
-		executeCommand("r", feedback);
-		displayStub(feedback);
-		executeCommand("r", feedback);
-		displayStub(feedback);
-		executeCommand("e 1 -p M -d 1602", feedback);
-		displayStub(feedback);
-		executeCommand("u", feedback);
-		displayStub(feedback);
-		executeCommand("a task two -p H -d 0907", feedback);
-		displayStub(feedback);
-		executeCommand("r", feedback);
-		displayStub(feedback);
-		executeCommand("f -p L", feedback);
-		displayStub(feedback);
-		executeCommand("d 1", feedback);
-		displayStub(feedback);
-		executeCommand("u", feedback);
-		displayStub(feedback);
-		
-		
+		Scanner sc = new Scanner(System.in);
+		while(true) {
+			System.out.println("Enter command: ");
+			String command = sc.nextLine();
+			executeCommand(command, feedback);
+			displayStub(feedback);
+		}
+	
 		/*
 		 executeCommand("add task two  -d 1502 -p M", feedback);
 		executeCommand("add task three -d 0902 -p H", feedback);
