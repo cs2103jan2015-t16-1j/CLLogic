@@ -44,14 +44,7 @@ public class Task {
 	}
 	
 	public void setPriority(String priority) {
-		if(priority == null) {
-			return;
-		}
-		if(priority.equalsIgnoreCase(STRING_PRIORITY_LOW) ||
-				priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM) ||
-				priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
-			_priority = priority;
-		}
+		_priority = priority;
 	}
 	
 	public void setStartDate (String startDateString) {
@@ -137,20 +130,32 @@ public class Task {
 	}
 	
 	public String getPriority() {
-		return _priority;
+		if(_priority == null) {
+			return null;
+		}
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
+			return STRING_PRIORITY_LOW;
+		}
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
+			return STRING_PRIORITY_MEDIUM;
+		}
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+			return STRING_PRIORITY_HIGH;
+		}
+		return null;
 	}
 	
 	public int getPriorityInt() {
 		if(_priority == null) {
 			return 0;
 		}
-		if(_priority.equals(STRING_PRIORITY_LOW)) {
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
 			return NUM_PRIORITY_LOW;
 		}
-		if(_priority.equals(STRING_PRIORITY_MEDIUM)) {
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
 			return NUM_PRIORITY_MEDIUM;
 		}
-		if(_priority.equals(STRING_PRIORITY_HIGH)) {
+		if(_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
 			return NUM_PRIORITY_HIGH;
 		}
 		return 0;

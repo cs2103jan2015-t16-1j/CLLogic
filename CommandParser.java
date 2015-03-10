@@ -126,10 +126,9 @@ public class CommandParser {
 			feedback.append(MESSAGE_INVALID_PRIORITY_LEVEL);
 			return false;
 		}
-		
-		char priority = priorityLevelString.charAt(INDEX_PRIORITY_LEVEL);
-		
-		if(priority == 'L' || priority == 'M' || priority == 'H') {
+		if(priorityLevelString.equalsIgnoreCase("H") ||
+				priorityLevelString.equalsIgnoreCase("M") ||
+				priorityLevelString.equalsIgnoreCase("L")) {
 			return true;
 		} 
 		else {

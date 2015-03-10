@@ -4,23 +4,21 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Stack;
 
-
 public class QLLogic {
-
-	private static final String MESSAGE_NOTHING_TO_REDO = "Nothing to redo.";
-	private static final String MESSAGE_NOTHING_TO_UNDO = "Nothing to undo.";
-	private static final char CHAR_DESCENDING_UPPERCASE = 'D';
-	private static final char CHAR_ASCENDING_UPPERCASE = 'A';
-	private static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range entered.";
-	private static final String MESSAGE_NO_MATCHES_FOUND = "No matches found for criteria entered.";
-	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword.";
-	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\"";
-	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\".";
-	private static final String MESSAGE_NO_DATE_ENTERED = "No date entered.";
-	private static final String MESSAGE_NO_NAME_ENTERED = "No task date entered.";
-	private static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\".";
-	private static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed.";
-	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed.";
+	
+	private static final String MESSAGE_CANNOT_CLEAR_NAME = "Cannot clear the name of a task. ";
+	private static final String MESSAGE_NOTHING_TO_REDO = "Nothing to redo. ";
+	private static final String MESSAGE_NOTHING_TO_UNDO = "Nothing to undo. ";
+	private static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range entered. ";
+	private static final String MESSAGE_NO_MATCHES_FOUND = "No matches found for criteria entered. ";
+	private static final String MESSAGE_NO_TASK_MATCHES_KEYWORD = "No task matches keyword. ";
+	private static final String MESSAGE_INVALID_SORTING_CRITERIA_TYPE = "Invalid sorting criteria type \"%1$s\" ";
+	private static final String MESSAGE_INVALID_SORTING_ORDER = "Invalid sorting order \"%1$s\". ";
+	private static final String MESSAGE_NO_DATE_ENTERED = "No date entered. ";
+	private static final String MESSAGE_NO_NAME_ENTERED = "No task date entered. ";
+	private static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\". ";
+	private static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed. ";
+	private static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed. ";
 	
 	private static final int INDEX_COMMAND = 0;
 	private static final int INDEX_FIELDS = 1;
@@ -37,6 +35,10 @@ public class QLLogic {
 	
 	private static final int OFFSET_TASK_NUMBER_TO_INDEX = -1;
 	
+	private static final String COMMAND_REDO_ABBREV = "r";
+	private static final String COMMAND_REDO = "redo";
+	private static final String COMMAND_UNDO_ABBREV = "u";
+	private static final String COMMAND_UNDO = "undo";
 	private static final String COMMAND_FIND = "find";
 	private static final String COMMAND_FIND_ABBREV = "f";
 	private static final String COMMAND_SORT = "s";
@@ -55,9 +57,12 @@ public class QLLogic {
 	private static final String STRING_NO = "N";
 	private static final String STRING_YES = "Y";
 	private static final String STRING_NEW_LINE = "\n";
+	private static final String STRING_CLEAR = "CLR";
 	
 	private static final char CHAR_DESCENDING_LOWERCASE = 'd';
 	private static final char CHAR_ASCENDING_LOWERCASE = 'a';
+	private static final char CHAR_DESCENDING_UPPERCASE = 'D';
+	private static final char CHAR_ASCENDING_UPPERCASE = 'A';
 
 	
 	public static LinkedList<Task> _workingList;	//TODO change back to private
@@ -101,11 +106,14 @@ public class QLLogic {
 		for(int i = 0; i < _workingList.size(); i++) {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
+				System.out.print(_workingList.get(i).getStartDateString() + " ");
+			} catch(NullPointerException e) {}
+			try {
 				System.out.print(_workingList.get(i).getDueDateString() + " ");
 			} catch(NullPointerException e) {}
-			try {	
+			if(_workingList.get(i).getPriority() != null) {
 				System.out.print(_workingList.get(i).getPriority() + " ");
-			} catch(NullPointerException e) {}
+			} 
 			System.out.println();
 		}
 		
@@ -114,11 +122,14 @@ public class QLLogic {
 		for(int i = 0; i < _workingListMaster.size(); i++) {
 			System.out.print(_workingListMaster.get(i).getName() + " ");
 			try {
+				System.out.print(_workingList.get(i).getStartDateString() + " ");
+			} catch(NullPointerException e) {}
+			try {
 				System.out.print(_workingListMaster.get(i).getDueDateString() + " ");
 			} catch(NullPointerException e) {}
-			try {	
-				System.out.print(_workingListMaster.get(i).getPriority() + " ");
-			} catch(NullPointerException e) {}
+			if(_workingList.get(i).getPriority() != null) {
+				System.out.print(_workingList.get(i).getPriority() + " ");
+			} 
 			System.out.println();
 		}
 		
@@ -144,10 +155,10 @@ public class QLLogic {
 			return executeSort(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_FIND) || command.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
 			return executeFind(fieldLine, feedback);
-		} else if(command.equalsIgnoreCase("undo") || command.equalsIgnoreCase("u")) {
+		} else if(command.equalsIgnoreCase(COMMAND_UNDO) || command.equalsIgnoreCase(COMMAND_UNDO_ABBREV)) {
 			undo(feedback);
 			return _workingList;
-		} else if(command.equalsIgnoreCase("redo") || command.equalsIgnoreCase("r")) {
+		} else if(command.equalsIgnoreCase(COMMAND_REDO) || command.equalsIgnoreCase(COMMAND_REDO_ABBREV)) {
 			redo(feedback);
 			return _workingList;
 		} else {
@@ -167,7 +178,6 @@ public class QLLogic {
 		for(int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-	
 	
 	private static void copyListsForUndoStack(LinkedList<Task> list, LinkedList<Task> listMaster,
 			LinkedList<Task> listNew, LinkedList<Task> listMasterNew) {
@@ -265,12 +275,20 @@ public class QLLogic {
 			feedback.append(MESSAGE_INVALID_TASK_NAME);
 			return;
 		}
+		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
+			feedback.append(MESSAGE_CANNOT_CLEAR_NAME);
+			return;
+		}
 		task.setName(fieldContent);
 	}
 
 	private static void updatePriority(Task task, StringBuilder feedback, String fieldContent) {
+		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
+			task.setPriority(null);
+			return;
+		}
 		if(CommandParser.isValidPriorityLevel(fieldContent, feedback)) {
-			task.setPriority(fieldContent.substring(INDEX_PRIORITY_LEVEL, INDEX_PRIORITY_LEVEL + 1));
+			task.setPriority(fieldContent);
 		}
 	}
 	
@@ -281,6 +299,10 @@ public class QLLogic {
 	}
 	
 	private static void updateDueDate(Task task, StringBuilder feedback, String fieldContent) {
+		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
+			task.setDueDate((Calendar)null);
+			return;
+		}
 		if(!DateHandler.isValidDateFormat(fieldContent, feedback)) {
 			return;
 		}
@@ -288,6 +310,10 @@ public class QLLogic {
 	}
 	
 	private static void updateStartDate(Task task, StringBuilder feedback, String fieldContent) {
+		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
+			task.setStartDate((Calendar)null);
+			return;
+		}
 		if(!DateHandler.isValidDateFormat(fieldContent, feedback)) {
 			return;
 		}
@@ -635,7 +661,7 @@ public class QLLogic {
 			int matchScore = 0;
 			for(int j = 0; j < keywords.length; j++) {
 				String currentKeyword = keywords[j].trim();
-				matchScore = matchKeywordsStore(currentTask, currentKeyword);
+				matchScore = matchKeywordScore(currentTask, currentKeyword);
 			}
 			if(matchScore != 0) {
 				foundTasksWithMatchScore.add(new Object[]{currentTask, Integer.valueOf(matchScore)});
@@ -672,7 +698,7 @@ public class QLLogic {
 		return newWorkingList;
 	}
 
-	private static int matchKeywordsStore(Task currentTask, String currentKeyword) {
+	private static int matchKeywordScore(Task currentTask, String currentKeyword) {
 		String[] taskNameWords = currentTask.getName().split(STRING_BLANK_SPACE);
 		int totalScore = 0;
 		for(int i = 0; i < taskNameWords.length; i++) {
@@ -710,7 +736,7 @@ public class QLLogic {
 					criterionOrder == CHAR_DESCENDING_UPPERCASE) {
 				switch(criterionType) {
 				case 'd':
-					sortByDate(criterionOrder, feedback);
+					sortByDueDate(criterionOrder, feedback);
 					break;
 					
 				case 'p':
@@ -818,7 +844,7 @@ public class QLLogic {
 		_workingList = tasksWithNoPriority;
 	}
 	
-	private static void sortByDate(char order, StringBuilder feedback) {
+	private static void sortByDueDate(char order, StringBuilder feedback) {
 		LinkedList<Task> tasksWithNoDueDate = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++){
 			if(_workingList.get(i).getDueDate() == null) {
