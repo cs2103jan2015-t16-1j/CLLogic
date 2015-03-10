@@ -101,23 +101,22 @@ public class QLLogic {
 	// Stub
 	public static void displayStub(StringBuilder feedback) {
 		System.out.println("Feedback: " + feedback.toString());
-		
-		System.out.println("	workingList: ");
+		System.out.println("Name: start date: due date:");
 		for(int i = 0; i < _workingList.size(); i++) {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
 				System.out.print(_workingList.get(i).getStartDateString() + " ");
-			} catch(NullPointerException e) {}
+			} catch(NullPointerException e) {System.out.print("        ");}
 			try {
 				System.out.print(_workingList.get(i).getDueDateString() + " ");
-			} catch(NullPointerException e) {}
+			} catch(NullPointerException e) {System.out.print("        ");}
 			if(_workingList.get(i).getPriority() != null) {
 				System.out.print(_workingList.get(i).getPriority() + " ");
 			} 
 			System.out.println();
 		}
 		
-		
+		/*
 		System.out.println("	workingListMaster: ");
 		for(int i = 0; i < _workingListMaster.size(); i++) {
 			System.out.print(_workingListMaster.get(i).getName() + " ");
@@ -132,6 +131,7 @@ public class QLLogic {
 			} 
 			System.out.println();
 		}
+		*/
 		
 		System.out.println();
 		feedback.setLength(0);
