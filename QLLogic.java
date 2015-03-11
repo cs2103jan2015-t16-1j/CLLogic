@@ -279,15 +279,18 @@ public class QLLogic {
 			return;
 		}
 		task.setName(fieldContent);
+		feedback.append("Task name updated. ");
 	}
 
 	private static void updatePriority(Task task, StringBuilder feedback, String fieldContent) {
 		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
 			task.setPriority(null);
+			feedback.append("Priority level cleared. ");
 			return;
 		}
 		if(CommandParser.isValidPriorityLevel(fieldContent, feedback)) {
 			task.setPriority(fieldContent);
+			feedback.append("Priority level updated. ");
 		}
 	}
 	
@@ -300,23 +303,27 @@ public class QLLogic {
 	private static void updateDueDate(Task task, StringBuilder feedback, String fieldContent) {
 		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
 			task.setDueDate((Calendar)null);
+			feedback.append("Due date cleared. ");
 			return;
 		}
 		if(!DateHandler.isValidDateFormat(fieldContent, feedback)) {
 			return;
 		}
 		task.setDueDate(fieldContent);
+		feedback.append("Due date updated. ");
 	}
 	
 	private static void updateStartDate(Task task, StringBuilder feedback, String fieldContent) {
 		if(fieldContent.equalsIgnoreCase(STRING_CLEAR)) {
 			task.setStartDate((Calendar)null);
+			feedback.append("Start date cleared. ");
 			return;
 		}
 		if(!DateHandler.isValidDateFormat(fieldContent, feedback)) {
 			return;
 		}
 		task.setStartDate(fieldContent);
+		feedback.append("Start date updated. ");
 	}
 	
 	/** Add methods **/
@@ -330,6 +337,7 @@ public class QLLogic {
 		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
 		
 		Task newTask = new Task(taskName);
+		feedback.append("\"" + taskName + "\" added. ");
 		
 		for(int i = 0; i < fields.size(); i++) {
 			updateField(fields.get(i), newTask, feedback);
@@ -358,6 +366,8 @@ public class QLLogic {
 		
 		Task taskToEdit = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
 		
+		feedback.append("Edit \"" + taskToEdit.getName() + "\": ");
+		
 		for(int i = 0; i < fields.size(); i++) {
 			updateField(fields.get(i), taskToEdit, feedback);
 		}
@@ -379,6 +389,7 @@ public class QLLogic {
 		
 		Task taskToDelete = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
 		deleteTask(taskToDelete);
+		feedback.append("\"" + taskToDelete.getName() + "\" deleted. ");
 		
 		QLStorage.saveFile(_workingListMaster, _fileName);
 		updateUndoStack();
