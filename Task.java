@@ -100,7 +100,10 @@ public class Task {
 	
 	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
-		if(_dueDate == null || _dueDate.compareTo(today) > 0) {
+		if(_dueDate == null || 
+				_isCompleted == true || 
+				_dueDate.compareTo(today) > 0)
+				 {
 			_isOverdue = false;
 		}
 		else {
