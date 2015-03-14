@@ -14,7 +14,7 @@ public class CommandParser {
 	public static final String MESSAGE_TASK_NUMBER_OUT_OF_RANGE = "Task number entered out of range. Nothing is executed.";
 	public static final String MESSAGE_INVALID_TASK_NUMBER = "Invalid task number entered. Nothing is executed.";
 	
-	public static final int INDEX_COMMAND = 0;
+	public static final int INDEX_ACTION = 0;
 	public static final int INDEX_FIELDS = 1;
 	public static final int INDEX_FIELD_CONTENT_START = 1;
 	public static final int INDEX_FIELD_TYPE = 0;
@@ -51,12 +51,12 @@ public class CommandParser {
 	public static final char CHAR_NO_PRIORITY_LEVEL = 'N';
 	
 	/* CommandProcessor Class start */
-	public static String[] splitCommandAndFields(String instruction) {
-		String[] splittedInstruction = instruction.split(STRING_BLANK_SPACE, NUM_SPLIT_TWO);
+	public static String[] splitActionAndFields(String command) {
+		String[] splittedInstruction = command.split(STRING_BLANK_SPACE, NUM_SPLIT_TWO);
 		if(splittedInstruction.length == 1) {
-			String command = splittedInstruction[INDEX_COMMAND];
+			String action = splittedInstruction[INDEX_ACTION];
 			splittedInstruction = new String[2];
-			splittedInstruction[INDEX_COMMAND] = command;
+			splittedInstruction[INDEX_ACTION] = action;
 			splittedInstruction[INDEX_FIELDS] = "";
 		}
 		return splittedInstruction;
@@ -81,26 +81,26 @@ public class CommandParser {
 		return fields_linkedList;
 	}
 	
-	public static String extractTaskName(String fieldLineWithName) {
-		int taskNameEndIndex = fieldLineWithName.length();
-		for(int i = 0; i < fieldLineWithName.length(); i++) {
-			if(fieldLineWithName.charAt(i) == '-') {
+	public static String extractTaskName(String fieldLine) {
+		int taskNameEndIndex = fieldLine.length();
+		for(int i = 0; i < fieldLine.length(); i++) {
+			if(fieldLine.charAt(i) == '-') {
 				taskNameEndIndex = i;
 				break;
 			}
 		}
-		return fieldLineWithName.substring(0, taskNameEndIndex).trim();
+		return fieldLine.substring(0, taskNameEndIndex).trim();
 	}
 	
-	public static String extractTaskNumberString(String fieldLineWithTaskNumber) {
-		int taskNumberEndIndex = fieldLineWithTaskNumber.length();
-		for(int i = 0; i < fieldLineWithTaskNumber.length(); i++) {
-			if(fieldLineWithTaskNumber.charAt(i) == ' ') {
+	public static String extractTaskNumberString(String fieldLine) {
+		int taskNumberEndIndex = fieldLine.length();
+		for(int i = 0; i < fieldLine.length(); i++) {
+			if(fieldLine.charAt(i) == ' ') {
 				taskNumberEndIndex = i;
 				break;
 			}
 		}
-		return fieldLineWithTaskNumber.substring(0, taskNumberEndIndex).trim();
+		return fieldLine.substring(0, taskNumberEndIndex).trim();
 	}
 	
 	public static boolean isValidTaskNumber(String taskNumberString, StringBuilder feedback, int workListSize) {
