@@ -10,11 +10,11 @@ public class DateHandler {
 	
 	private static final int OFFSET_CALENDAR_MONTH_FIELD = -1;
 	
-	public static int decodeYearFromDateInt(int date) {
+	private static int decodeYearFromDateInt(int date) {
 		return date%10000;
 	}
 	
-	public static int decodeMonthFromDateInt(int date) {
+	private static int decodeMonthFromDateInt(int date) {
 		int month = (date%1000000)/10000;
 		if(month/10 == 0) {
 			month = month%10;
@@ -22,12 +22,12 @@ public class DateHandler {
 		return month;
 	}
 
-	public static int decodeDayFromDateInt(int date) {
+	private static int decodeDayFromDateInt(int date) {
 		int day = date/1000000;
 		return day;
 	}
 	
-	public static int changeFromDateStringToDateInt(String dateString) {
+	private static int convertToDateInt(String dateString) {
 		if(dateString.charAt(0) == '0') {
 			dateString = dateString.replaceFirst("0", "");
 		}
@@ -55,7 +55,7 @@ public class DateHandler {
 		return dateInt;
 	}
 	
-	public static int formatDateIntToDDMMYYYY(int dateInt) {
+	private static int formatDateIntToDDMMYYYY(int dateInt) {
 		if(String.valueOf(dateInt).length() == 8 || String.valueOf(dateInt).length() == 7) {
 			return dateInt;
 		} 
@@ -84,7 +84,7 @@ public class DateHandler {
 		}
 		
 		try {
-			int dateInt = changeFromDateStringToDateInt(dateString);
+			int dateInt = convertToDateInt(dateString);
 			int day = decodeDayFromDateInt(dateInt); 
 			int month = decodeMonthFromDateInt(dateInt);
 
@@ -104,17 +104,14 @@ public class DateHandler {
 		return true;
 	}
 	
-	public static Calendar changeFromDateStringToDateCalendar(String dateString, StringBuilder feedback) {
-		if(!isValidDateFormat(dateString, feedback)) {
-			return null;
-		} 
-		else {
-			int dateInt = changeFromDateStringToDateInt(dateString);
-			int dayInt = decodeDayFromDateInt(dateInt);
-			int monthInt = decodeMonthFromDateInt(dateInt);
-			int yearInt = decodeYearFromDateInt(dateInt);
-			return (Calendar) new GregorianCalendar(yearInt, monthInt + OFFSET_CALENDAR_MONTH_FIELD, dayInt);
-		}
+	public static Calendar convertToDateCalendar(String dateString) {
+		int dateInt = convertToDateInt(dateString);
+		int dayInt = decodeDayFromDateInt(dateInt);
+		int monthInt = decodeMonthFromDateInt(dateInt);
+		int yearInt = decodeYearFromDateInt(dateInt);
+		return (Calendar) new GregorianCalendar(yearInt, 
+				monthInt + OFFSET_CALENDAR_MONTH_FIELD, 
+				dayInt);
 	}
 
 }

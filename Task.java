@@ -7,7 +7,6 @@ public class Task {
 	private static final String STRING_PRIORITY_HIGH = "H";
 	private static final String STRING_PRIORITY_MEDIUM = "M";
 	private static final String STRING_PRIORITY_LOW = "L";
-	private static final int OFFSET_CALENDAR_MONTH = -1;
 	
 	private static final int NUM_0_SEC = 0;
 	private static final int NUM_0_MIN = 0;
@@ -48,6 +47,15 @@ public class Task {
 	}
 	
 	public void setStartDate (String startDateString) {
+		Calendar startDate = DateHandler.
+				convertToDateCalendar(startDateString);
+		startDate.set(Calendar.HOUR_OF_DAY, NUM_0_HOUR);
+		startDate.set(Calendar.MINUTE, NUM_0_MIN);
+		startDate.set(Calendar.SECOND, NUM_0_SEC);
+		_startDate = startDate;
+		
+		// older implementation
+		/*
 		int startDateInt = DateHandler.changeFromDateStringToDateInt(startDateString);
 		
 		int startDay = DateHandler.decodeDayFromDateInt(startDateInt);
@@ -59,9 +67,19 @@ public class Task {
 				startDay, 
 				NUM_0_HOUR, 
 				NUM_0_MIN, NUM_0_SEC);
+		*/
 	}
 	
 	public void setDueDate (String dueDateString) {
+		Calendar dueDate = DateHandler.
+				convertToDateCalendar(dueDateString);
+		dueDate.set(Calendar.HOUR_OF_DAY, NUM_23_HOUR);
+		dueDate.set(Calendar.MINUTE, NUM_59_MIN);
+		dueDate.set(Calendar.SECOND, NUM_59_SEC);
+		_dueDate = dueDate;
+		
+		// older implementation
+		/*
 		int dueDateInt = DateHandler.changeFromDateStringToDateInt(dueDateString);
 		
 		int dueDay = DateHandler.decodeDayFromDateInt(dueDateInt);
@@ -73,6 +91,7 @@ public class Task {
 				dueDay, 
 				NUM_23_HOUR, 
 				NUM_59_MIN, NUM_59_SEC);
+		*/
 		
 		updateIsOverdue();
 	}

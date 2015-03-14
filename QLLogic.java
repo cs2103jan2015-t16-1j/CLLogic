@@ -69,11 +69,11 @@ public class QLLogic {
 	private static LinkedList<Task> _workingListMaster;
 	private static Stack<LinkedList<Task>> _undoStack;
 	private static Stack<LinkedList<Task>> _redoStack;
-	private static String _fileName;
+	private static String _filepath;
 	
 	/** General methods **/
 	public static LinkedList<Task> setup(String fileName) {
-		_fileName = fileName; 
+		_filepath = fileName; 
 		_undoStack = new Stack<LinkedList<Task>>();
 		_redoStack = new Stack<LinkedList<Task>>();
 		_workingList = QLStorage.loadFile(fileName);
@@ -138,7 +138,7 @@ public class QLLogic {
 	}
 
 	public static LinkedList<Task> executeCommand(String instruction, StringBuilder feedback) {
-		String[] splittedInstruction = CommandParser.splitCommandAndFields(instruction);
+		String[] splittedInstruction = CommandParser.splitActionAndFields(instruction);
 		
 		String command = splittedInstruction[INDEX_COMMAND].trim();
 		String fieldLine = splittedInstruction[INDEX_FIELDS].trim();
@@ -168,7 +168,7 @@ public class QLLogic {
 	}
 
 	/** Multi-command methods **/ 
-	//TODO change to private
+	//stub
 	public static void clearWorkingList() {
 		_workingList = new LinkedList<Task>();
 	}
@@ -219,7 +219,7 @@ public class QLLogic {
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
 		
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 	
 	private static void redo(StringBuilder feedback) {
@@ -237,7 +237,7 @@ public class QLLogic {
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
 		
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 	
 	
@@ -346,7 +346,7 @@ public class QLLogic {
 		_workingList.add(newTask);
 		_workingListMaster.add(newTask);
 		
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 		updateUndoStack();
 		return _workingList;
 	}
@@ -372,7 +372,7 @@ public class QLLogic {
 			updateField(fields.get(i), taskToEdit, feedback);
 		}
 				
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 		updateUndoStack();
 		return _workingList;
 	}
@@ -391,7 +391,7 @@ public class QLLogic {
 		deleteTask(taskToDelete);
 		feedback.append("\"" + taskToDelete.getName() + "\" deleted. ");
 		
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 		updateUndoStack();
 		return _workingList;
 	}
@@ -414,7 +414,7 @@ public class QLLogic {
 		Task taskToComplete = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
 		completeTask(taskToComplete);
 		
-		QLStorage.saveFile(_workingListMaster, _fileName);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 		updateUndoStack();
 		return _workingList;
 	}
@@ -429,13 +429,15 @@ public class QLLogic {
 	}
 	
 	/** Find methods **/
-	private static LinkedList<Task> executeFind(String fieldLine, StringBuilder feedback) {
+	private static LinkedList<Task> executeFind(String fieldLine, 
+			StringBuilder feedback) {
 		LinkedList<Task> workingListBackUp = new LinkedList<Task>();
 		copyList(_workingList, workingListBackUp);
 		
 		recover();
 		
-		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
+		LinkedList<String> fields = CommandParser.
+				processFieldLine(fieldLine);
  		for(int i = 0; i < fields.size(); i++) {
 			filterWorkingListByCriteria(fields.get(i), feedback);
 		}
@@ -626,22 +628,28 @@ public class QLLogic {
 	private static void filterByDateRange(String criteriaDates, StringBuilder feedback, char startOrDueDate) {
 		String[] startEndDates = criteriaDates.split(":");
 		
-		if(startEndDates.length == 1) {
+		if(startEndDates.length == 1 || startEndDates.length == 0) {
 			feedback.append("Invalid date criteria entered. ");
 			_workingList.clear();
 			return;
 		}
 		
-		Calendar startDate = DateHandler.changeFromDateStringToDateCalendar(startEndDates[0], feedback);
-		if(startDate == null) {
+		String startDateString = startEndDates[0];
+		if(!DateHandler.isValidDateFormat(startDateString, feedback)) {
 			_workingList.clear();
 			return;
-		}
-		Calendar endDate = DateHandler.changeFromDateStringToDateCalendar(startEndDates[1], feedback);
-		if(endDate == null) {
+		} 
+		Calendar startDate = DateHandler.
+				convertToDateCalendar(startDateString);
+		
+		String endDateString = startEndDates[1];
+		if(!DateHandler.isValidDateFormat(endDateString, feedback)) {
 			_workingList.clear();
 			return;
-		}
+		} 
+		Calendar endDate = DateHandler.
+				convertToDateCalendar(endDateString);
+
 		startDate.set(Calendar.HOUR, NUM_0_HOUR);
 		startDate.set(Calendar.MINUTE, NUM_0_MIN);
 		startDate.set(Calendar.SECOND, NUM_0_SEC);
@@ -673,11 +681,12 @@ public class QLLogic {
 	}
 
 	private static void filterBySingleDate(String singleDateCriteria, StringBuilder feedback, char startOrDueDate) {
-		Calendar dateCriteria = DateHandler.changeFromDateStringToDateCalendar(singleDateCriteria, feedback);
-		if(dateCriteria == null) {
+		if(!DateHandler.isValidDateFormat(singleDateCriteria, feedback)) {
 			_workingList.clear();
 			return;
-		}
+		} 
+		Calendar dateCriteria = DateHandler.
+				convertToDateCalendar(singleDateCriteria);
 		
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
@@ -706,12 +715,13 @@ public class QLLogic {
 		copyList(bufferList, _workingList);
 	}
 	
-	private static void filterByDateBefore(String criteriaDates, StringBuilder feedback, char startOrDueDate) {
-		Calendar dateCriteria = DateHandler.changeFromDateStringToDateCalendar(criteriaDates, feedback);
-		if(dateCriteria == null) {
+	private static void filterByDateBefore(String dateCriteriaString, StringBuilder feedback, char startOrDueDate) {
+		if(!DateHandler.isValidDateFormat(dateCriteriaString, feedback)) {
 			_workingList.clear();
 			return;
-		}
+		} 
+		Calendar dateCriteria = DateHandler.
+				convertToDateCalendar(dateCriteriaString);
 		dateCriteria.set(Calendar.HOUR_OF_DAY, NUM_23_HOUR);
 		dateCriteria.set(Calendar.MINUTE, NUM_59_MIN);
 		dateCriteria.set(Calendar.SECOND, NUM_59_SEC);
@@ -741,12 +751,16 @@ public class QLLogic {
 		copyList(bufferList, _workingList);
 	}
 	
-	private static void filterByDateAfter(String criteriaDates, StringBuilder feedback, char startOrDueDate) {
-		Calendar dateCriteria = DateHandler.changeFromDateStringToDateCalendar(criteriaDates, feedback);
-		if(dateCriteria == null) {
+	private static void filterByDateAfter(String dateCriteriaString, StringBuilder feedback, char startOrDueDate) {
+		if(!DateHandler.isValidDateFormat(dateCriteriaString, feedback)) {
 			_workingList.clear();
 			return;
-		}
+		} 
+		Calendar dateCriteria = DateHandler.
+				convertToDateCalendar(dateCriteriaString);
+		dateCriteria.set(Calendar.HOUR_OF_DAY, NUM_0_HOUR);
+		dateCriteria.set(Calendar.MINUTE, NUM_0_MIN);
+		dateCriteria.set(Calendar.SECOND, NUM_0_SEC);
 		
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for(int i = 0; i < _workingList.size(); i++) {
@@ -835,13 +849,16 @@ public class QLLogic {
 	}
 	
 	/** Sort methods **/
-	private static LinkedList<Task> executeSort(String fieldLine, StringBuilder feedback) {
-		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
+	private static LinkedList<Task> executeSort(String fieldLine, 
+			StringBuilder feedback) {
+		LinkedList<String> fields = CommandParser.
+				processFieldLine(fieldLine);
 		if(fields.size() == 0) {
 			feedback.append("No field entered.");
 			return _workingList;
 		}	
-		LinkedList<char[]> sortingCriteria = CommandParser.getSortingCriteria(fields);
+		LinkedList<char[]> sortingCriteria = CommandParser.
+				getSortingCriteria(fields);
 		sortByCriteria(sortingCriteria, feedback);
 		updateUndoStack();
 		return _workingList;
@@ -869,11 +886,15 @@ public class QLLogic {
 					break;
 					
 				default:
-					feedback.append(String.format(MESSAGE_INVALID_SORTING_CRITERIA_TYPE, criterionType)).append(STRING_NEW_LINE);
+					feedback.append(String.
+							format(MESSAGE_INVALID_SORTING_CRITERIA_TYPE, 
+									criterionType));
 					break;
 				}
 			} else {
-				feedback.append(String.format(MESSAGE_INVALID_SORTING_ORDER, criterionOrder)).append(STRING_NEW_LINE);
+				feedback.append(String.
+						format(MESSAGE_INVALID_SORTING_ORDER, 
+								criterionOrder));
 			}
 		}
 	}
