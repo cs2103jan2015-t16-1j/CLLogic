@@ -3,6 +3,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Stack;
+import java.util.logging.*;
 
 public class QLLogic {
 	
@@ -138,30 +139,42 @@ public class QLLogic {
 	}
 
 	public static LinkedList<Task> executeCommand(String instruction, StringBuilder feedback) {
+		// logging
+		Logger ECLogger = Logger.getLogger("executeCommand");
+		
 		String[] splittedInstruction = CommandParser.splitActionAndFields(instruction);
 		
 		String command = splittedInstruction[INDEX_COMMAND].trim();
 		String fieldLine = splittedInstruction[INDEX_FIELDS].trim();
 				
 		if(command.equalsIgnoreCase(COMMAND_ADD) || command.equalsIgnoreCase(COMMAND_ADD_ABBREV)) {
+			ECLogger.log(Level.INFO, "add executed");
 			return executeAdd(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_EDIT) || command.equalsIgnoreCase(COMMAND_EDIT_ABBREV)) {
+			ECLogger.log(Level.INFO, "edit executed");
 			return executeEdit(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_DELETE) || command.equalsIgnoreCase(COMMAND_DELETE_ABBREV)) {
+			ECLogger.log(Level.INFO, "delete executed");
 			return executeDelete(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_COMPLETE) || command.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
+			ECLogger.log(Level.INFO, "complete executed");
 			return executeComplete(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_SORT) || command.equalsIgnoreCase(COMMAND_SORT_ABBREV)) {
+			ECLogger.log(Level.INFO, "sort executed");
 			return executeSort(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_FIND) || command.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
+			ECLogger.log(Level.INFO, "find executed");
 			return executeFind(fieldLine, feedback);
 		} else if(command.equalsIgnoreCase(COMMAND_UNDO) || command.equalsIgnoreCase(COMMAND_UNDO_ABBREV)) {
+			ECLogger.log(Level.INFO, "undo executed");
 			undo(feedback);
 			return _workingList;
 		} else if(command.equalsIgnoreCase(COMMAND_REDO) || command.equalsIgnoreCase(COMMAND_REDO_ABBREV)) {
+			ECLogger.log(Level.INFO, "redo executed");
 			redo(feedback);
 			return _workingList;
 		} else {
+			ECLogger.log(Level.INFO, "invlaid command");
 			feedback.append(MESSAGE_INVALID_COMMAND);
 			return _workingList;
 		}
@@ -243,9 +256,14 @@ public class QLLogic {
 	
 	/** Update methods **/
 	private static void updateField(String field, Task task, StringBuilder feedback) {
+		// logging
+		Logger uFLogger = Logger.getLogger("updateField");
+		
 		char fieldType = field.charAt(INDEX_FIELD_TYPE);
+		uFLogger.log(Level.INFO, "Field type: " + String.valueOf(fieldType));
+		
 		String fieldContent = field.substring(INDEX_FIELD_CONTENT_START).trim();
-			
+
 		switch(fieldType) {
 		case 'd':		
 			updateDueDate(task, feedback, fieldContent);
@@ -264,6 +282,7 @@ public class QLLogic {
 			break;
 				
 		default: 
+			uFLogger.log(Level.INFO, "Exit without updating field " + String.valueOf(fieldType));
 			feedback.append(String.format(MESSAGE_INVALID_FIELD_TYPE, fieldType)).append(STRING_NEW_LINE);
 			return;
 		}
