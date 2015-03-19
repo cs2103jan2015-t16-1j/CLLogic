@@ -142,7 +142,7 @@ public class QLLogic {
 		// logging
 		Logger ECLogger = Logger.getLogger("executeCommand");
 		
-		String[] splittedInstruction = CommandParser.splitActionAndFields(instruction);
+		String[] splittedInstruction = OldCommandParser.splitActionAndFields(instruction);
 		
 		String command = splittedInstruction[INDEX_COMMAND].trim();
 		String fieldLine = splittedInstruction[INDEX_FIELDS].trim();
@@ -307,7 +307,7 @@ public class QLLogic {
 			feedback.append("Priority level cleared. ");
 			return;
 		}
-		if(CommandParser.isValidPriorityLevel(fieldContent, feedback)) {
+		if(OldCommandParser.isValidPriorityLevel(fieldContent, feedback)) {
 			task.setPriority(fieldContent);
 			feedback.append("Priority level updated. ");
 		}
@@ -347,13 +347,13 @@ public class QLLogic {
 	
 	/** Add methods **/
 	private static LinkedList<Task> executeAdd(String fieldLineWithName, StringBuilder feedback) {
-		String taskName = CommandParser.extractTaskName(fieldLineWithName);
-		if(!CommandParser.isValidTaskName(taskName, feedback)) {
+		String taskName = OldCommandParser.extractTaskName(fieldLineWithName);
+		if(!OldCommandParser.isValidTaskName(taskName, feedback)) {
 			return _workingList;
 		}
 		
 		String fieldLine= fieldLineWithName.replaceFirst(taskName, STRING_NO_CHAR).trim();
-		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
+		LinkedList<String> fields = OldCommandParser.processFieldLine(fieldLine);
 		
 		Task newTask = new Task(taskName);
 		feedback.append("\"" + taskName + "\" added. ");
@@ -373,15 +373,15 @@ public class QLLogic {
 	/** Edit methods **/
 	private static LinkedList<Task> executeEdit(String fieldLineWithTaskNumber, StringBuilder feedback) {
 		int taskNumber;
-		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
-		if(!CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
+		String taskNumberString = OldCommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(!OldCommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
 			return _workingList;
 		} else {
 			taskNumber = Integer.parseInt(taskNumberString);
 		}
 		
 		String fieldLine= fieldLineWithTaskNumber.replaceFirst(String.valueOf(taskNumber), STRING_NO_CHAR).trim();
-		LinkedList<String> fields = CommandParser.processFieldLine(fieldLine);
+		LinkedList<String> fields = OldCommandParser.processFieldLine(fieldLine);
 		
 		Task taskToEdit = _workingList.get(taskNumber + OFFSET_TASK_NUMBER_TO_INDEX);
 		
@@ -399,8 +399,8 @@ public class QLLogic {
 	/** Delete methods **/
 	private static LinkedList<Task> executeDelete(String fieldLineWithTaskNumber, StringBuilder feedback) {
 		int taskNumber;
-		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
-		if(CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
+		String taskNumberString = OldCommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(OldCommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
 			taskNumber = Integer.parseInt(taskNumberString);
 		} else {
 			return _workingList;
@@ -423,8 +423,8 @@ public class QLLogic {
 	/** Complete methods **/
 	private static LinkedList<Task> executeComplete(String fieldLineWithTaskNumber, StringBuilder feedback) {
 		int taskNumber;
-		String taskNumberString = CommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
-		if(CommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
+		String taskNumberString = OldCommandParser.extractTaskNumberString(fieldLineWithTaskNumber);
+		if(OldCommandParser.isValidTaskNumber(taskNumberString, feedback, _workingList.size())) {
 			taskNumber = Integer.parseInt(taskNumberString);
 		} else {
 			return _workingList;
@@ -455,7 +455,7 @@ public class QLLogic {
 		
 		recover();
 		
-		LinkedList<String> fields = CommandParser.
+		LinkedList<String> fields = OldCommandParser.
 				processFieldLine(fieldLine);
  		for(int i = 0; i < fields.size(); i++) {
 			filterWorkingListByCriteria(fields.get(i), feedback);
@@ -519,7 +519,7 @@ public class QLLogic {
 	}
 
 	private static void filterByOverdueStatus(String fieldCriteria, StringBuilder feedback) {
-		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
+		if(OldCommandParser.isValidYesNo(fieldCriteria, feedback)) {
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
 				Task currentTask = _workingList.get(i);
@@ -535,7 +535,7 @@ public class QLLogic {
 	}
 	
 	private static void filterByCompleteStatus(String fieldCriteria, StringBuilder feedback) {
-		if(CommandParser.isValidYesNo(fieldCriteria, feedback)) {
+		if(OldCommandParser.isValidYesNo(fieldCriteria, feedback)) {
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
 				Task currentTask = _workingList.get(i);
@@ -551,7 +551,7 @@ public class QLLogic {
 	}
 	
 	private static void filterByPriority(String fieldCriteria, StringBuilder feedback) {
-		if(CommandParser.isValidPriorityLevel(fieldCriteria, feedback)) {
+		if(OldCommandParser.isValidPriorityLevel(fieldCriteria, feedback)) {
 			String priorityLevel = fieldCriteria.substring(INDEX_PRIORITY_LEVEL, INDEX_PRIORITY_LEVEL + 1);
 			LinkedList<Task> bufferList = new LinkedList<Task>();
 			for(int i = 0; i < _workingList.size(); i++) {
@@ -870,13 +870,13 @@ public class QLLogic {
 	/** Sort methods **/
 	private static LinkedList<Task> executeSort(String fieldLine, 
 			StringBuilder feedback) {
-		LinkedList<String> fields = CommandParser.
+		LinkedList<String> fields = OldCommandParser.
 				processFieldLine(fieldLine);
 		if(fields.size() == 0) {
 			feedback.append("No field entered.");
 			return _workingList;
 		}	
-		LinkedList<char[]> sortingCriteria = CommandParser.
+		LinkedList<char[]> sortingCriteria = OldCommandParser.
 				getSortingCriteria(fields);
 		sortByCriteria(sortingCriteria, feedback);
 		updateUndoStack();
