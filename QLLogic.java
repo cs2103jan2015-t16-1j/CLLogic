@@ -77,7 +77,7 @@ public class QLLogic {
 		_filepath = fileName; 
 		_undoStack = new Stack<LinkedList<Task>>();
 		_redoStack = new Stack<LinkedList<Task>>();
-		_workingList = QLStorage.loadFile(fileName);
+		_workingList = QLStorage.loadFile(new LinkedList<Task>(), fileName);
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
 		_undoStack.push(_workingListMaster);
