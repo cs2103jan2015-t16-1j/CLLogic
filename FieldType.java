@@ -1,0 +1,11 @@
+public enum FieldType {
+	TASK_NAME,
+	START_DATE,
+	DUE_DATE,
+	DATE_RANGE,
+	PRIORITY,
+	REMINDER,
+	
+	COMPLETED,
+	OVERDUE;
+}
