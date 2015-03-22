@@ -2,42 +2,51 @@ import java.util.Calendar;
 
 public class Field {
 	
-	FieldType _fieldType;
+	private FieldType _fieldType;
 	
-	String _taskName;
-	Calendar _startDate;
-	Calendar _dueDate;
-	Calendar _reminderDate;
-	PriorityLevel _priority;
+	private String _taskName;
+	private Calendar _date;
+	private PriorityLevel _priority;
+	private Calendar[] _dateRange;
 	
-	Calendar[] _dateRange;
+	private FieldCriteria _fieldCriteria;
 	
-	FieldCriteria _fieldCriteria;
+	public Field(FieldType fieldType) {
+		_fieldType = fieldType;
+	}
 	
 	public Field(FieldType fieldType, 
-			Object content, 
-			FieldCriteria fieldCriteria) {
-		
-		/* assertion */
-		assert fieldType != null;
-		assert content != null;
-		assert fieldCriteria != null;
+			Object fieldContent) {
 		
 		_fieldType = fieldType;
-		_fieldCriteria = fieldCriteria;
+		updateFieldContent(fieldContent);
+	}
+	
+	public Field(FieldType fieldType, 
+			Object fieldContent, 
+			FieldCriteria fieldCriteria) {
 		
-		switch(fieldType) {
+		_fieldType = fieldType;
+		updateFieldContent(fieldContent);
+		updateFieldCriteria(fieldCriteria);
+	}
+	
+	public Field(FieldType fieldType, 
+			FieldCriteria fieldCriteria) {
+		
+		_fieldType = fieldType;
+		updateFieldCriteria(fieldCriteria);
+	}
+
+	private void updateFieldContent(Object content) {
+		switch(_fieldType) {
 		case TASK_NAME:
 			_taskName = (String)content;
 			break;
 		case START_DATE:
-			_startDate = (Calendar)content;
-			break;
 		case DUE_DATE:
-			_dueDate = (Calendar)content;
-			break;
 		case REMINDER:
-			_reminderDate = (Calendar)content;
+			_date = (Calendar)content;
 			break;
 		case DATE_RANGE:
 			_dateRange = (Calendar[])content;
@@ -53,6 +62,10 @@ public class Field {
 		}
 	}
 	
+	private void updateFieldCriteria(FieldCriteria fieldCriteria) {
+		_fieldCriteria = fieldCriteria;
+	}
+	
 	public FieldType getFieldType() {
 		return _fieldType;
 	}
@@ -61,16 +74,8 @@ public class Field {
 		return _taskName;
 	}
 	
-	public Calendar getStartDate() {
-		return _startDate;
-	}
-	
-	public Calendar getDueDate() {
-		return _dueDate;
-	}
-	
-	public Calendar getReminderDate() {
-		return _reminderDate;
+	public Calendar getDate() {
+		return _date;
 	}
 	
 	public Calendar[] getDateRange() {

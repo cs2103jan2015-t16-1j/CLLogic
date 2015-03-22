@@ -46,6 +46,25 @@ public class Task {
 		_priority = priority;
 	}
 	
+	public void setPriority(PriorityLevel priority) {
+		switch(priority) {
+		case HIGH:
+			_priority = STRING_PRIORITY_HIGH;
+			break;
+		case MEDIUM:
+			_priority = STRING_PRIORITY_MEDIUM;
+			break;
+		case LOW:
+			_priority = STRING_PRIORITY_LOW;
+			break;
+		case CLR:
+			_priority = null;
+			break;
+		default:
+			break;
+		}
+	}
+	
 	public void setStartDate (String startDateString) {
 		Calendar startDate = DateHandler.
 				convertToDateCalendar(startDateString);
@@ -192,11 +211,17 @@ public class Task {
 	}
 	
 	public String getStartDateString() {
+		if(_startDate == null) {
+			return "no start date";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(_startDate.getTime());
 	}
 	
 	public String getDueDateString() {
+		if(_startDate == null) {
+			return "no due date";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(_dueDate.getTime());
 	}

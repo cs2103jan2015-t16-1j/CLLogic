@@ -5,6 +5,7 @@ public enum FieldType {
 	DATE_RANGE,
 	PRIORITY,
 	REMINDER,
+	DURATION,
 	
 	COMPLETED,
 	OVERDUE;

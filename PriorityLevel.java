@@ -1,5 +1,6 @@
 public enum PriorityLevel {
 	HIGH,
 	MEDIUM,
-	LOW;
+	LOW,
+	CLR;
 }
