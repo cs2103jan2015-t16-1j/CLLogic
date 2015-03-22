@@ -46,25 +46,6 @@ public class Task {
 		_priority = priority;
 	}
 	
-	public void setPriority(PriorityLevel priority) {
-		switch(priority) {
-		case HIGH:
-			_priority = STRING_PRIORITY_HIGH;
-			break;
-		case MEDIUM:
-			_priority = STRING_PRIORITY_MEDIUM;
-			break;
-		case LOW:
-			_priority = STRING_PRIORITY_LOW;
-			break;
-		case CLR:
-			_priority = null;
-			break;
-		default:
-			break;
-		}
-	}
-	
 	public void setStartDate (String startDateString) {
 		Calendar startDate = DateHandler.
 				convertToDateCalendar(startDateString);

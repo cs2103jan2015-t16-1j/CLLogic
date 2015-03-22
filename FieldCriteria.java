@@ -6,6 +6,7 @@ public enum FieldCriteria {
 	ON,
 	AFTER,
 	BETWEEN,
+	ALL,
 	
 	// complete 
 	// overdue

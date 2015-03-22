@@ -1,3 +1,4 @@
+import java.util.Calendar;
 import java.util.LinkedList;
 
 public class EditAction extends Action {
@@ -41,38 +42,48 @@ public class EditAction extends Action {
 	}
 
 	public void execute() {
-		for(Field field: _fields) {
+		for (Field field : _fields) {
 			FieldType fieldType = field.getFieldType();
-			switch(fieldType) {
+			switch (fieldType) {
 			case TASK_NAME:
 				_task.setName(field.getTaskName());
-				this._feedback.append("Task name set to \"" + 
-						field.getTaskName() +
-						"\". ");
+				this._feedback.append("Task name set to \""
+						+ field.getTaskName() + "\". ");
 				break;
 			case START_DATE:
-				_task.setStartDate(field.getDate());
-				this._feedback.append("Start date set to " + 
-						_task.getStartDateString() +
-						". ");
+				if (field.shouldClearDate()) {
+					_task.setStartDate((Calendar) null);
+				} else {
+					_task.setStartDate(field.getDate());
+					this._feedback.append("Start date set to "
+							+ _task.getStartDateString() + ". ");
+				}
 				break;
 			case DUE_DATE:
-				_task.setDueDate(field.getDate());
-				this._feedback.append("Due date set to " + 
-						_task.getDueDateString() +
-						". ");
+				if (field.shouldClearDate()) {
+					_task.setDueDate((Calendar) null);
+				} else {
+					_task.setDueDate(field.getDate());
+					this._feedback.append("Due date set to "
+							+ _task.getDueDateString() + ". ");
+				}
 				break;
 			case REMINDER:
-				/* not implemented yet
-				_task.setReminder(field.getDate());
-				this._feedback.append("Reminder set to " + 
-						_task.getReminderDateString() +
-						". ");
-				*/
+				/*
+				 * not implemented yet _task.setReminder(field.getDate());
+				 * this._feedback.append("Reminder set to " +
+				 * _task.getReminderDateString() + ". ");
+				 */
 				break;
 			case PRIORITY:
 				_task.setPriority(field.getPriority());
-				this._feedback.append("Priority set. ");
+				if (field.getPriority().equalsIgnoreCase("clr")) {
+					_task.setPriority((String) null);
+					this._feedback.append("Priority cleared. ");
+
+				}
+				this._feedback.append("Priority set to \""
+						+ field.getPriority() + "\". ");
 				break;
 			default:
 				break;

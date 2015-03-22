@@ -232,11 +232,10 @@ public class CommandParser {
 							DateHandler.convertToDateCalendar(fromAndTo[0]
 									.trim()),
 							DateHandler.convertToDateCalendar(fromAndTo[1]
-									.trim())
-									};
-					}
+									.trim()) };
+				}
 			} else if (dateString.equalsIgnoreCase("clr")) {
-				fieldContent = null;
+				fieldContent = "clr";
 			} else {
 				fieldContent = DateHandler.convertToDateCalendar(dateString);
 			}
@@ -272,16 +271,18 @@ public class CommandParser {
 		return new Field(fieldType, fieldContent, fieldCriteria);
 	}
 
-	private PriorityLevel determinePriority(String fieldContentString) {
+	private String determinePriority(String fieldContentString) {
 		if (fieldContentString.equalsIgnoreCase("l")) {
-			return PriorityLevel.LOW;
+			return "L";
 		} else if (fieldContentString.equalsIgnoreCase("m")) {
-			return PriorityLevel.MEDIUM;
+			return "M";
 		} else if (fieldContentString.equalsIgnoreCase("l")) {
-			return PriorityLevel.HIGH;
+			return "L";
 		} else if (fieldContentString.equalsIgnoreCase("clr")) {
-			return PriorityLevel.CLR;
+			return "CLR";
 		} else {
+			_feedback.append("Invalid priority level \"" + fieldContentString
+					+ "\". ");
 			return null;
 		}
 	}
@@ -304,6 +305,8 @@ public class CommandParser {
 		} else if (criteriaString.equalsIgnoreCase("n")) {
 			return FieldCriteria.NO;
 		} else {
+			_feedback.append("Invalid criteria \"" + criteriaString
+					+ "\". ");
 			return null;
 		}
 	}
