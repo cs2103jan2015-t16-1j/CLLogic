@@ -7,10 +7,9 @@ public class EditAction extends Action {
 	private LinkedList<Field> _fields;
 	private Task _task;
 
-	public EditAction(int taskNumber, LinkedList<Field> fields,
-			StringBuilder feedback) {
+	public EditAction(int taskNumber, LinkedList<Field> fields) {
 
-		this._feedback = feedback;
+		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
 
 		if (taskNumber != 0) {
@@ -22,10 +21,9 @@ public class EditAction extends Action {
 		_fields = fields;
 	}
 
-	public EditAction(Task task, LinkedList<Field> fields,
-			StringBuilder feedback) {
+	public EditAction(Task task, LinkedList<Field> fields) {
 
-		this._feedback = feedback;
+		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
 		_task = task;
 		_fields = fields;
@@ -38,6 +36,8 @@ public class EditAction extends Action {
 		if (isTaskIndexInRange(workingList)) {
 			_task = workingList.get(_taskIndex);
 			execute();
+		} else {
+			this._feedback.append("Task # out of range. ");
 		}
 	}
 
@@ -76,12 +76,15 @@ public class EditAction extends Action {
 				 */
 				break;
 			case PRIORITY:
-				_task.setPriority(field.getPriority());
+				if(field.getPriority() == null) {
+					break;
+				}
 				if (field.getPriority().equalsIgnoreCase("clr")) {
 					_task.setPriority((String) null);
 					this._feedback.append("Priority cleared. ");
-
+					break;
 				}
+				_task.setPriority(field.getPriority());
 				this._feedback.append("Priority set to \""
 						+ field.getPriority() + "\". ");
 				break;

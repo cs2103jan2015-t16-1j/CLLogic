@@ -3,5 +3,6 @@ public enum ActionType {
 	DELETE,
 	EDIT, 
 	SORT,
-	FIND;
+	FIND,
+	COMPLETE;
 }

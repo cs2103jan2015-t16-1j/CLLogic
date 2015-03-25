@@ -4,8 +4,8 @@ public class DeleteAction extends Action {
 
 	private int _taskIndex;
 
-	public DeleteAction(int taskNumber, StringBuilder feedback) {
-		this._feedback = feedback;
+	public DeleteAction(int taskNumber) {
+		this._feedback = new StringBuilder();
 		this._type = ActionType.DELETE;
 
 		if (taskNumber != 0) {
@@ -21,12 +21,12 @@ public class DeleteAction extends Action {
 		if (isTaskIndexInRange(workingList)) {
 			Task taskToDel = workingList.get(_taskIndex);
 			workingList.remove(taskToDel);
-			workingList.remove(taskToDel);
+			workingListMaster.remove(taskToDel);
 			this._feedback.append("Task #" + 
 					(_taskIndex + 1) +
 					" deleted. ");
 		} else {
-			this._feedback.append("Task number not in range. ");
+			this._feedback.append("Task # out of range. ");
 			return;
 		}
 	}

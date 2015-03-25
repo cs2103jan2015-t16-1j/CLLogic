@@ -3,7 +3,7 @@ import java.util.LinkedList;
 
 public class QLStorage {
 
-	public static LinkedList<Task> loadFile(String fileName) {
+	public static LinkedList<Task> loadFile(LinkedList<Task> list, String fileName) {
 		return new LinkedList<Task>();
 	}
 

@@ -11,5 +11,7 @@ public enum FieldCriteria {
 	// complete 
 	// overdue
 	YES,
-	NO;
+	NO,
+	
+	CLEAR_DATE;
 }

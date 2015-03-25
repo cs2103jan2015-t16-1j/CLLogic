@@ -44,14 +44,18 @@ public class Field {
 		case START_DATE:
 		case DUE_DATE:
 		case REMINDER:
-			if (((String)content).equals("clr")) {
+			if (_fieldCriteria == FieldCriteria.CLEAR_DATE) {
 				_shouldClearDate = true;
 				break;
 			} else {
 				_shouldClearDate = false;
-				_date = (Calendar) content;
+				try {
+					_date = (Calendar) content;
+				} catch (ClassCastException e) {
+					_dateRange = (Calendar[]) content;
+				}
+				break;
 			}
-			break;
 		case DATE_RANGE:
 			_dateRange = (Calendar[]) content;
 			break;
@@ -93,7 +97,7 @@ public class Field {
 	public FieldCriteria getCriteria() {
 		return _fieldCriteria;
 	}
-	
+
 	public boolean shouldClearDate() {
 		return _shouldClearDate;
 	}

@@ -109,6 +109,14 @@ public class Task {
 		_isCompleted = isCompleted;
 	}
 	
+	public void toggleCompleted() {
+		if(_isCompleted) {
+			setNotCompleted();
+		} else {
+			setCompleted();
+		}
+	}
+	
 	public void setCompleted() {
 		_isCompleted = true;
 	}
@@ -200,7 +208,7 @@ public class Task {
 	}
 	
 	public String getDueDateString() {
-		if(_startDate == null) {
+		if(_dueDate == null) {
 			return "no due date";
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
