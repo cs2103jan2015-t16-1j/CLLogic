@@ -1,171 +1,393 @@
+import java.util.Calendar;
 import java.util.LinkedList;
 
-
 public class CommandParser {
-	
-	public static final char CHAR_DASH = '-';
-	public static final String MESSAGE_INVALID_YES_NO = "Invalid yes/no field. Please use Y for yes and N for no.";
-	public static final String MESSAGE_NO_TASK_SATISFY_CRITERIA = "No task satisfies criteria entered.";
-	public static final String MESSAGE_NO_DATE_ENTERED = "No date entered.";
-	public static final String MESSAGE_INVALID_PRIORITY_LEVEL = "Invalid priority level.";
-	public static final String MESSAGE_INVALID_FIELD_TYPE = "Invalid field type \"%1$s\".";
-	public static final String MESSAGE_INVALID_COMMAND = "Invalid command. No command executed.";
-	public static final String MESSAGE_INVALID_TASK_NAME = "Invalid task name entered. Nothing is executed.";
-	public static final String MESSAGE_TASK_NUMBER_OUT_OF_RANGE = "Task number entered out of range. Nothing is executed.";
-	public static final String MESSAGE_INVALID_TASK_NUMBER = "Invalid task number entered. Nothing is executed.";
-	
-	public static final int INDEX_ACTION = 0;
-	public static final int INDEX_FIELDS = 1;
-	public static final int INDEX_FIELD_CONTENT_START = 1;
-	public static final int INDEX_FIELD_TYPE = 0;
-	public static final int INDEX_PRIORITY_LEVEL = 0;
-	
-	public static final int NUM_SPLIT_TWO = 2;
-	public static final int NUM_INVALID = -1;
-	public static final int NUM_0_SEC = 0;
-	public static final int NUM_0_MIN = 0;
-	public static final int NUM_0_HOUR = 0;
-	public static final int NUM_59_SEC = 59;
-	public static final int NUM_59_MIN = 59;
-	public static final int NUM_23_HOUR = 23;
-	
-	public static final int OFFSET_TASK_NUMBER_TO_INDEX = -1;
-	
-	public static final String COMMAND_ADD_ABBREV = "a";
-	public static final String COMMAND_ADD = "add";
-	public static final String COMMAND_EDIT_ABBREV = "e";
-	public static final String COMMAND_EDIT = "edit";
-	public static final String COMMAND_DELETE_ABBREV = "d";
-	public static final String COMMAND_DELETE = "delete";
-	public static final String COMMAND_COMPLETE_ABBREV = "c";
-	public static final String COMMAND_COMPLETE = "complete";
-	public static final String COMMAND_LIST_ABBREV = "l";
-	public static final String COMMAND_LIST = "list";
-	
-	public static final String STRING_NO_CHAR = "";
-	public static final String STRING_BLANK_SPACE = " ";
-	public static final String STRING_DASH = "-";
-	public static final String STRING_NO = "N";
-	public static final String STRING_YES = "Y";
-	
-	public static final char CHAR_NO_PRIORITY_LEVEL = 'N';
-	
-	/* CommandProcessor Class start */
-	public static String[] splitActionAndFields(String command) {
-		String[] splittedInstruction = command.split(STRING_BLANK_SPACE, NUM_SPLIT_TWO);
-		if(splittedInstruction.length == 1) {
-			String action = splittedInstruction[INDEX_ACTION];
-			splittedInstruction = new String[2];
-			splittedInstruction[INDEX_ACTION] = action;
-			splittedInstruction[INDEX_FIELDS] = "";
-		}
-		return splittedInstruction;
+
+	private StringBuilder _feedback;
+
+	private String _taskName;
+	private int _taskNumber;
+	private ActionType _actionType;
+	private LinkedList<Field> _fields;
+	private FieldCriteria _yesNo;
+
+	public CommandParser(String command) {
+		_feedback = new StringBuilder();
+		_fields = new LinkedList<Field>();
+		processCmdString(command);
 	}
-	
-	/**
-	 * Split field line into individual fields
-	 * 
-	 * @param fieldLine may consists of multiple fields
-	 * @return LinkedList of fields, LinkedList may be empty, fields always contain something trimmed
-	 */
-	public static LinkedList<String> processFieldLine(String fieldLine) {
-		String[] fields_array = fieldLine.split(STRING_DASH);
-		
-		LinkedList<String> fields_linkedList = new LinkedList<String>();
-		for(int i = 0; i < fields_array.length; i++) {
-			String field = fields_array[i].trim();
-			if(!field.equals(STRING_NO_CHAR)) {
-				fields_linkedList.add(field);
-			}
-		}
-		return fields_linkedList;
+
+	public StringBuilder getFeedback() {
+		return _feedback;
 	}
-	
-	public static String extractTaskName(String fieldLine) {
-		int taskNameEndIndex = fieldLine.length();
-		for(int i = 0; i < fieldLine.length(); i++) {
-			if(fieldLine.charAt(i) == '-') {
-				taskNameEndIndex = i;
-				break;
-			}
+
+	public Action getAction() {
+		if (_actionType == null) {
+			return null;
 		}
-		return fieldLine.substring(0, taskNameEndIndex).trim();
-	}
-	
-	public static String extractTaskNumberString(String fieldLine) {
-		int taskNumberEndIndex = fieldLine.length();
-		for(int i = 0; i < fieldLine.length(); i++) {
-			if(fieldLine.charAt(i) == ' ') {
-				taskNumberEndIndex = i;
-				break;
-			}
-		}
-		return fieldLine.substring(0, taskNumberEndIndex).trim();
-	}
-	
-	public static boolean isValidTaskNumber(String taskNumberString, StringBuilder feedback, int workListSize) {
-		try {
-			if(taskNumberString.equals(STRING_NO_CHAR)) {
-				feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-				return false;
-			} 
-			
-			if(Integer.parseInt(taskNumberString) > workListSize || Integer.parseInt(taskNumberString) < 1) {
-				feedback.append(MESSAGE_TASK_NUMBER_OUT_OF_RANGE);
-				return false;
-			}
-			return true;
-		} catch(NumberFormatException e) {
-			feedback.append(MESSAGE_INVALID_TASK_NUMBER);
-			return false;
-		}
-	}
-	
-	public static boolean isValidPriorityLevel(String priorityLevelString, StringBuilder feedback) {
-		if(priorityLevelString.equals(STRING_NO_CHAR)) {
-			feedback.append(MESSAGE_INVALID_PRIORITY_LEVEL);
-			return false;
-		}
-		if(priorityLevelString.equalsIgnoreCase("H") ||
-				priorityLevelString.equalsIgnoreCase("M") ||
-				priorityLevelString.equalsIgnoreCase("L")) {
-			return true;
-		} 
-		else {
-			feedback.append(MESSAGE_INVALID_PRIORITY_LEVEL);
-			return false;
+		switch (_actionType) {
+		case ADD:
+			return new AddAction(_taskName, _fields);
+		case DELETE:
+			return new DeleteAction(_taskNumber);
+		case EDIT:
+			return new EditAction(_taskNumber, _fields);
+		case SORT:
+			return new SortAction(_fields);
+		case FIND:
+			return new FindAction(_fields);
+		case COMPLETE:
+			return new CompleteAction(_taskNumber, _yesNo);
+		default:
+			return null;
 		}
 	}
 
-	public static boolean isValidYesNo(String yesNoString, StringBuilder feedback) {
-		if(yesNoString.equalsIgnoreCase(STRING_YES) || yesNoString.equalsIgnoreCase(STRING_NO)) {
-			return true;
+	private void processCmdString(String cmdString) {
+
+		if (cmdString.trim().equals("")) {
+			_feedback.append("Please enter a command. ");
+			return;
 		}
-		else {
-			feedback.append(MESSAGE_INVALID_YES_NO);
-			return false;
+
+		String[] actionAndFields = cmdString.split(" ", 2);
+
+		String actionString = actionAndFields[0].trim();
+
+		determineActionType(actionString);
+
+		if (_actionType == null) {
+			_feedback.append("Invalid action type. ");
+			return;
+		}
+
+		String fieldsString;
+
+		switch (_actionType) {
+		case ADD:
+			if (actionAndFields.length == 1) {
+				_feedback.append("No task name entered. ");
+				return;
+			}
+			extractTaskName(actionAndFields[1].trim());
+			if (_taskName == null) {
+				_feedback.append("No task name entered. ");
+				return;
+			}
+			actionAndFields[1] = actionAndFields[1].trim()
+					.replaceFirst(_taskName, "").trim();
+			break;
+		case EDIT:
+		case DELETE:
+		case COMPLETE:
+			if (actionAndFields.length == 1) {
+				return;
+			}
+			extractTaskNumber(actionAndFields[1].trim());
+			actionAndFields[1] = actionAndFields[1].trim()
+					.replaceFirst(String.valueOf(_taskNumber), "").trim();
+			break;
+		default:
+			break;
+		}
+		
+		if (actionAndFields.length == 1 || actionAndFields[1].trim().isEmpty()) {
+			/* unnecessary
+			_feedback.append("No fields entered. ");
+			*/
+			return;
+		}
+
+		fieldsString = actionAndFields[1].trim();
+
+		if (fieldsString.charAt(0) != '-' && fieldsString.charAt(0) != ' '
+				&& !fieldsString.equalsIgnoreCase("all")
+				&& !fieldsString.equalsIgnoreCase("y")
+				&& !fieldsString.equalsIgnoreCase("n")) {
+			int indexDash = fieldsString.indexOf('-');
+			String wrongFields;
+			if (indexDash != -1) {
+				wrongFields = fieldsString.substring(0,
+						fieldsString.indexOf('-'));
+			} else {
+				wrongFields = fieldsString;
+			}
+			_feedback.append("Invalid field format in \"" + wrongFields
+					+ "\". ");
+			fieldsString = fieldsString.replaceFirst(wrongFields, "");
+		}
+
+		fieldsString = " " + fieldsString;
+
+		determineFieldsPrim(fieldsString);
+	}
+
+	private void extractTaskNumber(String fieldsString) {
+		String[] numberAndFields = fieldsString.split(" ", 2);
+		String taskNumString = numberAndFields[0].trim();
+		if (taskNumString.isEmpty() || taskNumString.charAt(0) == '-'
+				|| taskNumString.charAt(0) == '0') {
+			_taskNumber = 0;
+			return;
+		}
+		try {
+			_taskNumber = Integer.parseInt(taskNumString);
+		} catch (NumberFormatException e) {
+			_taskNumber = 0;
 		}
 	}
-	
-	public static boolean isValidTaskName(String taskName, StringBuilder feedback) {
-		if(taskName.equals(STRING_NO_CHAR)) {
-			feedback.append(MESSAGE_INVALID_TASK_NAME);
-			return false;
-		} 
-		else {
-			return true;
+
+	private void extractTaskName(String fieldsString) {
+		int indexOfDash = fieldsString.indexOf("-");
+		String taskName;
+		if (indexOfDash == -1) {
+			taskName = fieldsString;
+		} else {
+			taskName = fieldsString.substring(0, indexOfDash).trim();
+		}
+		if (taskName.equals("") || taskName == null) {
+			return;
+		}
+		_taskName = taskName;
+	}
+
+	private void determineActionType(String actionString) {
+		if (actionString.equalsIgnoreCase("ADD")
+				|| actionString.equalsIgnoreCase("A")) {
+
+			_actionType = ActionType.ADD;
+
+		} else if (actionString.equalsIgnoreCase("EDIT")
+				|| actionString.equalsIgnoreCase("E")) {
+
+			_actionType = ActionType.EDIT;
+
+		} else if (actionString.equalsIgnoreCase("DELETE")
+				|| actionString.equalsIgnoreCase("DEL")
+				|| actionString.equalsIgnoreCase("D")) {
+
+			_actionType = ActionType.DELETE;
+
+		} else if (actionString.equalsIgnoreCase("FIND")
+				|| actionString.equalsIgnoreCase("F")) {
+
+			_actionType = ActionType.FIND;
+
+		} else if (actionString.equalsIgnoreCase("SORT")
+				|| actionString.equalsIgnoreCase("S")) {
+
+			_actionType = ActionType.SORT;
+
+		} else if (actionString.equalsIgnoreCase("COMPLETE")
+				|| actionString.equalsIgnoreCase("C")) {
+
+			_actionType = ActionType.COMPLETE;
+		} else {
+			return;
 		}
 	}
-	
-	public static LinkedList<char[]> getSortingCriteria(LinkedList<String> fields) {
-		LinkedList<char[]> sortingCriteria = new LinkedList<char[]>();
-		for(int i = 0; i < fields.size(); i++) {
-			String criterion = fields.get(i);
-			char criterionType = criterion.charAt(INDEX_FIELD_TYPE);
-			String criterionOrderString = criterion.substring(INDEX_FIELD_CONTENT_START).trim();
-			char criteriaOrder = criterionOrderString.charAt(0);
-			sortingCriteria.add(new char[]{criterionType, criteriaOrder});
+
+	private void determineFieldsPrim(String fieldsString) {
+		System.out.println(fieldsString);
+
+		if (fieldsString.trim().equalsIgnoreCase("all")) {
+			_fields.add(new Field(FieldType.ALL));
+			return;
 		}
-		return sortingCriteria;
+
+		if (fieldsString.trim().equalsIgnoreCase("y")) {
+			_yesNo = FieldCriteria.YES;
+			return;
+		}
+
+		if (fieldsString.trim().equalsIgnoreCase("n")) {
+			_yesNo = FieldCriteria.NO;
+			return;
+		}
+
+		String[] fieldStringArray = fieldsString.split(" -");
+
+		for (String fieldString : fieldStringArray) {
+			fieldString = fieldString.trim();
+			if (!fieldString.equals("")) {
+				Field field = parseField(fieldString);
+				if (field != null) {
+					_fields.add(field);
+				}
+			}
+		}
+	}
+
+	private Field parseField(String fieldString) {
+		/* Assertion */
+		assert !fieldString.equals("");
+
+		// empty field will not be added to field list
+		if (fieldString.length() == 1) {
+			return null;
+		}
+
+		char fieldTypeChar = fieldString.charAt(0);
+		char spaceAftFieldType = fieldString.charAt(1);
+
+		if (spaceAftFieldType != ' ') {
+			_feedback.append("Invalid field type \""
+					+ fieldString.split(" ", 2)[0].trim() + "\". ");
+		}
+
+		String fieldContentString = fieldString.substring(1).trim();
+
+		if (fieldContentString.equals("")) {
+			return null;
+		}
+
+		FieldType fieldType = null;
+		Object fieldContent = null;
+		FieldCriteria fieldCriteria = null;
+
+		switch (fieldTypeChar) {
+		case 'd':
+		case 's':
+		case 'r':
+
+			switch (fieldTypeChar) {
+			case 'd':
+				fieldType = FieldType.DUE_DATE;
+				break;
+			case 's':
+				fieldType = FieldType.START_DATE;
+				break;
+			case 'r':
+				fieldType = FieldType.REMINDER;
+				break;
+			default:
+				fieldType = null;
+				break;
+			}
+
+			String criteriaAndDate[] = fieldContentString.split(" ", 2);
+
+			String dateString;
+			String criteriaString;
+
+			if (criteriaAndDate.length == 2) {
+				dateString = criteriaAndDate[1].trim();
+				criteriaString = criteriaAndDate[0].trim();
+				fieldCriteria = determineFieldCriteria(criteriaString);
+			} else {
+				dateString = criteriaAndDate[0].trim();
+			}
+
+			if (fieldCriteria == FieldCriteria.BETWEEN) {
+				String fromAndTo[] = dateString.split(":", 2);
+				if (fromAndTo.length == 1) {
+					_feedback.append("Date range not valid");
+				} else {
+					Calendar[] dateRange = {
+							DateHandler.convertToDateCalendar(fromAndTo[0]
+									.trim()),
+							DateHandler.convertToDateCalendar(fromAndTo[1]
+									.trim()) };
+					fieldContent = dateRange;
+				}
+			} else if (dateString.equalsIgnoreCase("clr")) {
+				fieldCriteria = FieldCriteria.CLEAR_DATE;
+			} else if (dateString.equalsIgnoreCase("a") || dateString.equalsIgnoreCase("d")) {
+				fieldCriteria = determineFieldCriteria(dateString);
+			} else {
+				if(DateHandler.isValidDateFormat(dateString, _feedback)) {
+					fieldContent = DateHandler.convertToDateCalendar(dateString);
+				} 
+			}
+			break;
+
+		case 'l':
+
+			fieldType = FieldType.DURATION;
+			fieldCriteria = determineFieldCriteria(fieldContentString);
+			break;
+
+		case 'p':
+
+			fieldType = FieldType.PRIORITY;
+
+			if (_actionType == ActionType.SORT) {
+				fieldCriteria = determineFieldCriteria(fieldContentString);
+			}
+			if (_actionType == ActionType.ADD || _actionType == ActionType.FIND
+					|| _actionType == ActionType.EDIT) {
+				fieldContent = determinePriority(fieldContentString);
+			}
+			break;
+
+		case 'n':
+
+			fieldType = FieldType.TASK_NAME;
+			fieldContent = fieldContentString;
+			break;
+
+		case 'c':
+
+			fieldType = FieldType.COMPLETED;
+			fieldCriteria = determineFieldCriteria(fieldContentString);
+			break;
+
+		case 'o':
+
+			fieldType = FieldType.OVERDUE;
+			fieldCriteria = determineFieldCriteria(fieldContentString);
+			break;
+
+		default:
+
+			_feedback.append("Invalid field type \"" + fieldTypeChar + "\". ");
+			// null type will not be added to field list
+			return null;
+		}
+
+		// field always has valid field type
+		return new Field(fieldType, fieldContent, fieldCriteria);
+	}
+
+	private String determinePriority(String fieldContentString) {
+		if (fieldContentString.equalsIgnoreCase("l")) {
+			return "L";
+		} else if (fieldContentString.equalsIgnoreCase("m")) {
+			return "M";
+		} else if (fieldContentString.equalsIgnoreCase("H")) {
+			return "H";
+		} else if (fieldContentString.equalsIgnoreCase("clr")) {
+			return "CLR";
+		} else {
+			_feedback.append("Invalid priority level \"" + fieldContentString
+					+ "\". ");
+			return null;
+		}
+	}
+
+	private FieldCriteria determineFieldCriteria(String criteriaString) {
+		if (criteriaString.equalsIgnoreCase("a")) {
+			return FieldCriteria.ASCEND;
+		} else if (criteriaString.equalsIgnoreCase("d")) {
+			return FieldCriteria.DESCEND;
+		} else if (criteriaString.equalsIgnoreCase("bf")) {
+			return FieldCriteria.BEFORE;
+		} else if (criteriaString.equalsIgnoreCase("af")) {
+			return FieldCriteria.AFTER;
+		} else if (criteriaString.equalsIgnoreCase("on")) {
+			return FieldCriteria.ON;
+		} else if (criteriaString.equalsIgnoreCase("btw")) {
+			return FieldCriteria.BETWEEN;
+		} else if (criteriaString.equalsIgnoreCase("y")) {
+			return FieldCriteria.YES;
+		} else if (criteriaString.equalsIgnoreCase("n")) {
+			return FieldCriteria.NO;
+		} else {
+			_feedback.append("Invalid criteria \"" + criteriaString + "\". ");
+			return null;
+		}
+	}
+
+	public static void main(String args[]) {
 	}
 }

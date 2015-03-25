@@ -4,9 +4,9 @@ import java.util.GregorianCalendar;
 
 public class DateHandler {
 	
-	private static final String MESSAGE_INVALID_MONTH = "Invalid month entered.";
-	private static final String MESSAGE_INVALID_DAY = "Invalid day entered.";
-	private static final String MESSAGE_INVALID_DATE_FORMAT = "Invalid date format entered.";
+	private static final String MESSAGE_INVALID_MONTH = "Invalid month entered. ";
+	private static final String MESSAGE_INVALID_DAY = "Invalid day entered. ";
+	private static final String MESSAGE_INVALID_DATE_FORMAT = "Invalid date format entered. ";
 	
 	private static final int OFFSET_CALENDAR_MONTH_FIELD = -1;
 	
@@ -105,6 +105,7 @@ public class DateHandler {
 	}
 	
 	public static Calendar convertToDateCalendar(String dateString) {
+		
 		int dateInt = convertToDateInt(dateString);
 		int dayInt = decodeDayFromDateInt(dateInt);
 		int monthInt = decodeMonthFromDateInt(dateInt);

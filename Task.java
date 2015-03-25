@@ -109,6 +109,14 @@ public class Task {
 		_isCompleted = isCompleted;
 	}
 	
+	public void toggleCompleted() {
+		if(_isCompleted) {
+			setNotCompleted();
+		} else {
+			setCompleted();
+		}
+	}
+	
 	public void setCompleted() {
 		_isCompleted = true;
 	}
@@ -192,11 +200,17 @@ public class Task {
 	}
 	
 	public String getStartDateString() {
+		if(_startDate == null) {
+			return "no start date";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(_startDate.getTime());
 	}
 	
 	public String getDueDateString() {
+		if(_dueDate == null) {
+			return "no due date";
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(_dueDate.getTime());
 	}
