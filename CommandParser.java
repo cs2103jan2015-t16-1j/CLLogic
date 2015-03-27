@@ -90,11 +90,11 @@ public class CommandParser {
 		default:
 			break;
 		}
-		
+
 		if (actionAndFields.length == 1 || actionAndFields[1].trim().isEmpty()) {
-			/* unnecessary
-			_feedback.append("No fields entered. ");
-			*/
+			/*
+			 * unnecessary _feedback.append("No fields entered. ");
+			 */
 			return;
 		}
 
@@ -265,39 +265,61 @@ public class CommandParser {
 				break;
 			}
 
-			String criteriaAndDate[] = fieldContentString.split(" ", 2);
+			if (_actionType == ActionType.FIND) {
+				String criteriaAndDate[] = fieldContentString.split(" ", 2);
 
-			String dateString;
-			String criteriaString;
+				String dateString;
+				String criteriaString;
 
-			if (criteriaAndDate.length == 2) {
-				dateString = criteriaAndDate[1].trim();
-				criteriaString = criteriaAndDate[0].trim();
-				fieldCriteria = determineFieldCriteria(criteriaString);
-			} else {
-				dateString = criteriaAndDate[0].trim();
-			}
-
-			if (fieldCriteria == FieldCriteria.BETWEEN) {
-				String fromAndTo[] = dateString.split("&", 2);
-				if (fromAndTo.length == 1) {
-					_feedback.append("Date range not valid");
+				if (criteriaAndDate.length == 2) {
+					dateString = criteriaAndDate[1].trim();
+					criteriaString = criteriaAndDate[0].trim();
+					fieldCriteria = determineFieldCriteria(criteriaString);
 				} else {
-					Calendar[] dateRange = {
-							DateHandler.convertToDateCalendar(fromAndTo[0]
-									.trim()),
-							DateHandler.convertToDateCalendar(fromAndTo[1]
-									.trim()) };
-					fieldContent = dateRange;
+					dateString = criteriaAndDate[0].trim();
 				}
-			} else if (dateString.equalsIgnoreCase("clr")) {
+
+				if (fieldCriteria == FieldCriteria.BETWEEN) {
+					String fromAndTo[] = dateString.split("&", 2);
+					if (fromAndTo.length == 1) {
+						_feedback.append("Date range not valid");
+					} else {
+
+						DateParser fromDateParser = new DateParser(
+								fromAndTo[0].trim());
+						DateParser toDateParser = new DateParser(
+								fromAndTo[1].trim());
+						Calendar fromDate = fromDateParser.getDateTime();
+						Calendar toDate = toDateParser.getDateTime();
+
+						_feedback.append(fromDateParser.getFeedback());
+						_feedback.append(toDateParser.getFeedback());
+
+						if (fromDate != null && toDate != null) {
+							Calendar[] dateRange = {
+									fromDateParser.getDateTime(),
+									toDateParser.getDateTime() };
+							fieldContent = dateRange;
+						}
+					}
+				}
+				break;
+			}
+				
+			String dateString = fieldContentString;
+
+			if (dateString.equalsIgnoreCase("clr")) {
 				fieldCriteria = FieldCriteria.CLEAR_DATE;
-			} else if (dateString.equalsIgnoreCase("a") || dateString.equalsIgnoreCase("d")) {
+			} else if (dateString.equalsIgnoreCase("a")
+					|| dateString.equalsIgnoreCase("d")) {
 				fieldCriteria = determineFieldCriteria(dateString);
 			} else {
-				if(DateHandler.isValidDateFormat(dateString, _feedback)) {
-					fieldContent = DateHandler.convertToDateCalendar(dateString);
-				} 
+				DateParser dateParser = new DateParser(dateString);
+				Calendar dateTime = dateParser.getDateTime();
+				_feedback.append(dateParser.getFeedback());
+				if (dateTime != null) {
+					fieldContent = dateTime;
+				}
 			}
 			break;
 

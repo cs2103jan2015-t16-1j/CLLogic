@@ -228,7 +228,7 @@ public class FindAction extends Action {
 	private void filterByDateRange(Calendar[] dateRange, FieldType fieldType,
 			FieldCriteria criteria, LinkedList<Task> workingList) {
 
-		if (fieldType == null || criteria == null) {
+		if (fieldType == null || criteria == null || dateRange == null) {
 			return;
 		}
 

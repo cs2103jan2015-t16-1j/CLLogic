@@ -81,7 +81,7 @@ public class EditAction extends Action {
 					this._feedback
 							.append("Due date entered is smaller than due date of task. ");
 					break;
-				}  else {
+				} else {
 					_task.setDueDate(field.getDate());
 					this._feedback.append("Due date set to "
 							+ _task.getDueDateString() + ". ");
