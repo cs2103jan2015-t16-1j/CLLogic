@@ -53,21 +53,40 @@ public class EditAction extends Action {
 			case START_DATE:
 				if (field.shouldClearDate()) {
 					_task.setStartDate((Calendar) null);
+					this._feedback.append("Start date cleared. ");
+					break;
+				} else if (field.getDate() == null) {
+					break;
+				} else if (_task.getDueDate() != null
+						&& field.getDate().compareTo(_task.getDueDate()) > 0) {
+					this._feedback
+							.append("Start date entered is bigger than due date of task. ");
+					break;
 				} else {
 					_task.setStartDate(field.getDate());
 					this._feedback.append("Start date set to "
 							+ _task.getStartDateString() + ". ");
+					break;
 				}
-				break;
+
 			case DUE_DATE:
 				if (field.shouldClearDate()) {
 					_task.setDueDate((Calendar) null);
-				} else {
+					this._feedback.append("Due date cleared. ");
+					break;
+				} else if (field.getDate() == null) {
+					break;
+				} else if (_task.getStartDate() != null
+						&& field.getDate().compareTo(_task.getStartDate()) < 0) {
+					this._feedback
+							.append("Due date entered is smaller than due date of task. ");
+					break;
+				}  else {
 					_task.setDueDate(field.getDate());
 					this._feedback.append("Due date set to "
 							+ _task.getDueDateString() + ". ");
+					break;
 				}
-				break;
 			case REMINDER:
 				/*
 				 * not implemented yet _task.setReminder(field.getDate());
@@ -76,18 +95,18 @@ public class EditAction extends Action {
 				 */
 				break;
 			case PRIORITY:
-				if(field.getPriority() == null) {
+				if (field.getPriority() == null) {
 					break;
-				}
-				if (field.getPriority().equalsIgnoreCase("clr")) {
+				} else if (field.getPriority().equalsIgnoreCase("clr")) {
 					_task.setPriority((String) null);
 					this._feedback.append("Priority cleared. ");
 					break;
+				} else {
+					_task.setPriority(field.getPriority());
+					this._feedback.append("Priority set to \""
+							+ field.getPriority() + "\". ");
+					break;
 				}
-				_task.setPriority(field.getPriority());
-				this._feedback.append("Priority set to \""
-						+ field.getPriority() + "\". ");
-				break;
 			default:
 				break;
 			}

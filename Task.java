@@ -127,6 +127,9 @@ public class Task {
 	
 	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
+		today.set(Calendar.HOUR_OF_DAY, 23);
+		today.set(Calendar.MINUTE, 59);
+		today.set(Calendar.SECOND, 59);
 		if(_dueDate == null || 
 				_isCompleted == true || 
 				_dueDate.compareTo(today) > 0)

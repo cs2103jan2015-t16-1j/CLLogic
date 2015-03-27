@@ -36,6 +36,27 @@ public class QLLogic {
 		_undoStack.push(new LinkedList<Task>());
 	}
 
+	// stub
+	private static void printStack(Stack<LinkedList<Task>> stack) {
+		Stack<LinkedList<Task>> buffer = new Stack<LinkedList<Task>>();
+		int stackCount = 0;
+		while (!stack.isEmpty()) {
+			stackCount++;
+			buffer.push(stack.pop());
+			LinkedList<Task> list = buffer.peek();
+			if (stackCount % 2 != 0) {
+				System.out.println("Stack " + stackCount);
+				for (Task task : list) {
+					System.out.println(task.getName());
+				}
+			}
+		}
+
+		while (!buffer.isEmpty()) {
+			stack.push(buffer.pop());
+		}
+	}
+
 	// Stub
 	public static void displayStub(StringBuilder feedback) {
 		System.out.println("Feedback: " + feedback.toString());
@@ -82,12 +103,14 @@ public class QLLogic {
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
 			undo(feedback);
+			printStack(_undoStack);
 			return _workingList;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
 			redo(feedback);
+			printStack(_undoStack);
 			return _workingList;
 		}
 
@@ -103,6 +126,7 @@ public class QLLogic {
 		feedback.append(action.getFeedback().toString());
 
 		updateUndoStack();
+		//printStack(_undoStack);
 
 		return _workingList;
 	}
@@ -154,9 +178,17 @@ public class QLLogic {
 
 		_workingList = _undoStack.pop();
 		_workingListMaster = _undoStack.pop();
+		LinkedList<Task> updatedWL = new LinkedList<Task>();
+		LinkedList<Task> updatedWLM = new LinkedList<Task>();
+
+		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
+				updatedWLM);
 
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
+
+		_workingList = updatedWL;
+		_workingListMaster = updatedWLM;
 
 		QLStorage.saveFile(_workingListMaster, _filepath);
 	}

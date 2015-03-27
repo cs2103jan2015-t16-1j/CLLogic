@@ -279,7 +279,7 @@ public class CommandParser {
 			}
 
 			if (fieldCriteria == FieldCriteria.BETWEEN) {
-				String fromAndTo[] = dateString.split(":", 2);
+				String fromAndTo[] = dateString.split("&", 2);
 				if (fromAndTo.length == 1) {
 					_feedback.append("Date range not valid");
 				} else {
