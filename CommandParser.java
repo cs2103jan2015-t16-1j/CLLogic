@@ -10,6 +10,9 @@ public class CommandParser {
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
 	private FieldCriteria _yesNo;
+	
+	private boolean _dateParsed;
+	private boolean _timeParsed;
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -316,6 +319,8 @@ public class CommandParser {
 			} else {
 				DateParser dateParser = new DateParser(dateString);
 				Calendar dateTime = dateParser.getDateTime();
+				_dateParsed = dateParser.isDateParsed();
+				_timeParsed = dateParser.isTimeParsed();
 				_feedback.append(dateParser.getFeedback());
 				if (dateTime != null) {
 					fieldContent = dateTime;
@@ -368,7 +373,10 @@ public class CommandParser {
 		}
 
 		// field always has valid field type
-		return new Field(fieldType, fieldContent, fieldCriteria);
+		Field field = new Field(fieldType, fieldContent, fieldCriteria);
+		field.setDateParsed(_dateParsed);
+		field.setTimeParsed(_timeParsed);
+		return field;
 	}
 
 	private String determinePriority(String fieldContentString) {

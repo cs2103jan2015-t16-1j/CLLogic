@@ -11,8 +11,8 @@ public class Field {
 
 	private FieldCriteria _fieldCriteria;
 
-	private boolean _dateParsed;
-	private boolean _timeParsed;
+	private boolean _dateParsed = false;
+	private boolean _timeParsed = false;
 
 	public Field(FieldType fieldType) {
 		_fieldType = fieldType;

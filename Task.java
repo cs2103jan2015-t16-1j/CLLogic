@@ -210,11 +210,27 @@ public class Task {
 		return sdf.format(_startDate.getTime());
 	}
 	
+	public String getStartDateTimeString() {
+		if(_startDate == null) {
+			return "no start date";
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		return sdf.format(_startDate.getTime());
+	}
+	
 	public String getDueDateString() {
 		if(_dueDate == null) {
 			return "no due date";
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(_dueDate.getTime());
+	}
+	
+	public String getDueDateTimeString() {
+		if(_dueDate == null) {
+			return "no due date";
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 		return sdf.format(_dueDate.getTime());
 	}
 	

@@ -65,12 +65,12 @@ public class QLLogic {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
 				System.out
-						.print(_workingList.get(i).getStartDateString() + " ");
+						.print(_workingList.get(i).getStartDateTimeString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateString() + " ");
+				System.out.print(_workingList.get(i).getDueDateTimeString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
