@@ -102,11 +102,11 @@ public class Field {
 		return _fieldCriteria;
 	}
 	
-	public boolean getDateParsed() {
+	public boolean isDateParsed() {
 		return _dateParsed;
 	}
 	
-	public boolean getTimeParsed() {
+	public boolean isTimeParsed() {
 		return _timeParsed;
 	}
 

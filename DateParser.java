@@ -166,8 +166,6 @@ public class DateParser {
 	}
 
 	public Calendar getDateTime() {
-		SimpleDateFormat sdf = new SimpleDateFormat(DATE_TIME_FORMAT_1);
-		System.out.println(sdf.format(_dateTime.getTime()));
 		return _dateTime;
 	}
 

@@ -1,4 +1,5 @@
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class EditAction extends Action {
@@ -51,109 +52,43 @@ public class EditAction extends Action {
 						+ field.getTaskName() + "\". ");
 				break;
 			case START_DATE:
+
 				if (field.shouldClearDate()) {
 					_task.setStartDate((Calendar) null);
 					this._feedback.append("Start date cleared. ");
 					break;
-				} else if (field.getDate() == null) {
-					break;
-				} else if (_task.getDueDate() != null
-						&& field.getDate().compareTo(_task.getDueDate()) > 0) {
-					this._feedback
-							.append("Start date/time entered is bigger than due date of task. ");
-					break;
-				} else if (field.getDateParsed() && field.getTimeParsed()
-						&& field.getDate().compareTo(_task.getDueDate()) > 0) {
-					_task.setStartDate(field.getDate());
-					this._feedback.append("Start date set to "
-							+ _task.getStartDateString() + ". ");
-					break;
-				} else if (field.getDateParsed() && !field.getTimeParsed()) {
-					if (_task.getStartDate() == null) {
-						_task.setStartDate(field.getDate());
-						_task.getStartDate().set(Calendar.HOUR_OF_DAY, 0);
-						_task.getStartDate().set(Calendar.MINUTE, 0);
-						_task.getStartDate().set(Calendar.SECOND, 0);
-					} else {
-						_task.getStartDate().set(Calendar.YEAR,
-								field.getDate().get(Calendar.YEAR));
-						_task.getStartDate().set(Calendar.MONTH,
-								field.getDate().get(Calendar.MONTH));
-						_task.getStartDate().set(Calendar.DAY_OF_MONTH,
-								field.getDate().get(Calendar.DAY_OF_MONTH));
-					}
-					this._feedback.append("Start date set to "
-							+ _task.getStartDateString() + ". ");
-					break;
-				} else if (!field.getDateParsed() && field.getTimeParsed()) {
-					if (_task.getStartDate() == null) {
-						_task.setStartDate(field.getDate());
-					} else {
-						_task.getStartDate().set(Calendar.HOUR_OF_DAY,
-								field.getDate().get(Calendar.HOUR_OF_DAY));
-						_task.getStartDate().set(Calendar.MINUTE,
-								field.getDate().get(Calendar.MINUTE));
-						_task.getStartDate().set(Calendar.SECOND,
-								field.getDate().get(Calendar.SECOND));
-					}
-					this._feedback.append("Start date set to "
-							+ _task.getStartDateString() + ". ");
-					break;
-				} else {
+				}
+
+				if (field.getDate() == null) {
 					break;
 				}
 
+				if (_task.getStartDate() != null) {
+					updateStartDate(field);
+				} else {
+					addStartDate(field);
+				}
+				break;
+
 			case DUE_DATE:
+
 				if (field.shouldClearDate()) {
 					_task.setDueDate((Calendar) null);
 					this._feedback.append("Due date cleared. ");
 					break;
-				} else if (field.getDate() == null) {
-					break;
-				} else if (_task.getStartDate() != null
-						&& field.getDate().compareTo(_task.getStartDate()) < 0) {
-					this._feedback
-							.append("Due date/time entered is smaller than due date of task. ");
-					break;
-				} else if (field.getDateParsed() && field.getTimeParsed()) {
-					_task.setDueDate(field.getDate());
-					this._feedback.append("Due date set to "
-							+ _task.getDueDateString() + ". ");
-					break;
-				} else if (field.getDateParsed() && !field.getTimeParsed()) {
-					if (_task.getDueDate() == null) {
-						_task.setDueDate(field.getDate());
-						_task.getDueDate().set(Calendar.HOUR_OF_DAY, 23);
-						_task.getDueDate().set(Calendar.MINUTE, 59);
-						_task.getDueDate().set(Calendar.SECOND, 59);
-					} else {
-						_task.getDueDate().set(Calendar.YEAR,
-								field.getDate().get(Calendar.YEAR));
-						_task.getDueDate().set(Calendar.MONTH,
-								field.getDate().get(Calendar.MONTH));
-						_task.getDueDate().set(Calendar.DAY_OF_MONTH,
-								field.getDate().get(Calendar.DAY_OF_MONTH));
-					}
-					this._feedback.append("Due date set to "
-							+ _task.getDueDateString() + ". ");
-					break;
-				} else if (!field.getDateParsed() && field.getTimeParsed()) {
-					if (_task.getDueDate() == null) {
-						_task.setDueDate(field.getDate());
-					} else {
-						_task.getDueDate().set(Calendar.HOUR_OF_DAY,
-								field.getDate().get(Calendar.HOUR_OF_DAY));
-						_task.getDueDate().set(Calendar.MINUTE,
-								field.getDate().get(Calendar.MINUTE));
-						_task.getDueDate().set(Calendar.SECOND,
-								field.getDate().get(Calendar.SECOND));
-					}
-					this._feedback.append("Due date set to "
-							+ _task.getDueDateString() + ". ");
-					break;
-				} else {
+				}
+
+				if (field.getDate() == null) {
 					break;
 				}
+
+				if (_task.getDueDate() != null) {
+					updateDueDate(field);
+				} else {
+					addDueDate(field);
+				}
+				break;
+
 			case REMINDER:
 				/*
 				 * not implemented yet _task.setReminder(field.getDate());
@@ -177,6 +112,135 @@ public class EditAction extends Action {
 			default:
 				break;
 			}
+		}
+	}
+
+	private void addDueDate(Field field) {
+		if (_task.getStartDate() != null
+				&& field.getDate().compareTo(_task.getStartDate()) < 0) {
+			this._feedback
+					.append("Due date/time entered is bigger than start date/time of task. ");
+			return;
+		}
+
+		_task.setDueDate(field.getDate());
+
+		if (!field.isTimeParsed()) {
+			_task.getDueDate().set(Calendar.HOUR_OF_DAY, 23);
+			_task.getDueDate().set(Calendar.MINUTE, 59);
+			_task.getDueDate().set(Calendar.SECOND, 59);
+		}
+
+		this._feedback.append("Due date set to " + _task.getDueDateTimeString()
+				+ ". ");
+	}
+
+	private void updateDueDate(Field field) {
+		Calendar newDate = new GregorianCalendar();
+
+		if (field.isDateParsed() && field.isTimeParsed()) {
+			addDueDate(field);
+			return;
+		} else if (field.isDateParsed()) {
+
+			newDate.set(Calendar.YEAR, field.getDate().get(Calendar.YEAR));
+			newDate.set(Calendar.MONTH, field.getDate().get(Calendar.MONTH));
+			newDate.set(Calendar.DAY_OF_MONTH,
+					field.getDate().get(Calendar.DAY_OF_MONTH));
+
+			newDate.set(Calendar.HOUR_OF_DAY,
+					_task.getDueDate().get(Calendar.HOUR_OF_DAY));
+			newDate.set(Calendar.MINUTE, _task.getDueDate()
+					.get(Calendar.MINUTE));
+
+		} else if (field.isTimeParsed()) {
+			newDate.set(Calendar.HOUR_OF_DAY,
+					field.getDate().get(Calendar.HOUR_OF_DAY));
+			newDate.set(Calendar.MINUTE, field.getDate().get(Calendar.MINUTE));
+
+			newDate.set(Calendar.YEAR, _task.getDueDate().get(Calendar.YEAR));
+			newDate.set(Calendar.MONTH, _task.getDueDate().get(Calendar.MONTH));
+			newDate.set(Calendar.DAY_OF_MONTH,
+					_task.getDueDate().get(Calendar.DAY_OF_MONTH));
+
+		} else {
+			return;
+		}
+
+		if (_task.getStartDate() != null
+				&& newDate.compareTo(_task.getStartDate()) < 0) {
+			this._feedback
+					.append("Due date/time entered is bigger than start date/time of task. ");
+		} else {
+			_task.setDueDate(newDate);
+			this._feedback.append("Due date set to "
+					+ _task.getDueDateTimeString() + ". ");
+
+		}
+
+	}
+
+	private void addStartDate(Field field) {
+		if (_task.getDueDate() != null
+				&& field.getDate().compareTo(_task.getDueDate()) > 0) {
+			this._feedback
+					.append("Start date/time entered is bigger than due date/time of task. ");
+			return;
+		}
+
+		_task.setStartDate(field.getDate());
+
+		if (!field.isTimeParsed()) {
+			_task.getStartDate().set(Calendar.HOUR_OF_DAY, 0);
+			_task.getStartDate().set(Calendar.MINUTE, 0);
+			_task.getStartDate().set(Calendar.SECOND, 0);
+		}
+
+		this._feedback.append("Start date set to " + _task.getStartDateTimeString()
+				+ ". ");
+	}
+
+	private void updateStartDate(Field field) {
+		Calendar newDate = new GregorianCalendar();
+
+		if (field.isDateParsed() && field.isTimeParsed()) {
+			addStartDate(field);
+			return;
+		} else if (field.isDateParsed()) {
+
+			newDate.set(Calendar.YEAR, field.getDate().get(Calendar.YEAR));
+			newDate.set(Calendar.MONTH, field.getDate().get(Calendar.MONTH));
+			newDate.set(Calendar.DAY_OF_MONTH,
+					field.getDate().get(Calendar.DAY_OF_MONTH));
+
+			newDate.set(Calendar.HOUR_OF_DAY,
+					_task.getStartDate().get(Calendar.HOUR_OF_DAY));
+			newDate.set(Calendar.MINUTE,
+					_task.getStartDate().get(Calendar.MINUTE));
+
+		} else if (field.isTimeParsed()) {
+			newDate.set(Calendar.HOUR_OF_DAY,
+					field.getDate().get(Calendar.HOUR_OF_DAY));
+			newDate.set(Calendar.MINUTE, field.getDate().get(Calendar.MINUTE));
+
+			newDate.set(Calendar.YEAR, _task.getStartDate().get(Calendar.YEAR));
+			newDate.set(Calendar.MONTH, _task.getStartDate()
+					.get(Calendar.MONTH));
+			newDate.set(Calendar.DAY_OF_MONTH,
+					_task.getStartDate().get(Calendar.DAY_OF_MONTH));
+
+		} else {
+			return;
+		}
+
+		if (_task.getDueDate() != null
+				&& newDate.compareTo(_task.getDueDate()) > 0) {
+			this._feedback
+					.append("Start date/time entered is bigger than due date/time of task. ");
+		} else {
+			_task.setStartDate(newDate);
+			this._feedback.append("Start date set to "
+					+ _task.getStartDateTimeString() + ". ");
 		}
 	}
 
