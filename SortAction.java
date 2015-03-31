@@ -5,7 +5,8 @@ public class SortAction extends Action {
 	private LinkedList<Field> _fields;
 
 	public SortAction(LinkedList<Field> fields) {
-
+		
+		this._isSuccess = true;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.SORT;
 		_fields = fields;
@@ -27,6 +28,7 @@ public class SortAction extends Action {
 			if (fieldType != FieldType.DUE_DATE
 					&& fieldType != FieldType.PRIORITY
 					&& fieldType != FieldType.DURATION) {
+				this._isSuccess = false;
 				this._feedback.append("Invalid field type. ");
 				return;
 			}
@@ -34,6 +36,7 @@ public class SortAction extends Action {
 			FieldCriteria order = field.getCriteria();
 
 			if (order != FieldCriteria.ASCEND && order != FieldCriteria.DESCEND) {
+				this._isSuccess = false;
 				this._feedback.append("Invalid order. ");
 				return;
 			}

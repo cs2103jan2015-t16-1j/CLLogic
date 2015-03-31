@@ -9,7 +9,8 @@ public class EditAction extends Action {
 	private Task _task;
 
 	public EditAction(int taskNumber, LinkedList<Field> fields) {
-
+		
+		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
 
@@ -130,7 +131,8 @@ public class EditAction extends Action {
 			_task.getDueDate().set(Calendar.MINUTE, 59);
 			_task.getDueDate().set(Calendar.SECOND, 59);
 		}
-
+		
+		this._isSuccess = true;
 		this._feedback.append("Due date set to " + _task.getDueDateTimeString()
 				+ ". ");
 	}
@@ -173,6 +175,7 @@ public class EditAction extends Action {
 					.append("Due date/time entered is bigger than start date/time of task. ");
 		} else {
 			_task.setDueDate(newDate);
+			this._isSuccess = true;
 			this._feedback.append("Due date set to "
 					+ _task.getDueDateTimeString() + ". ");
 
@@ -195,7 +198,8 @@ public class EditAction extends Action {
 			_task.getStartDate().set(Calendar.MINUTE, 0);
 			_task.getStartDate().set(Calendar.SECOND, 0);
 		}
-
+		
+		this._isSuccess = true;
 		this._feedback.append("Start date set to " + _task.getStartDateTimeString()
 				+ ". ");
 	}
@@ -239,6 +243,7 @@ public class EditAction extends Action {
 					.append("Start date/time entered is bigger than due date/time of task. ");
 		} else {
 			_task.setStartDate(newDate);
+			this._isSuccess = true;
 			this._feedback.append("Start date set to "
 					+ _task.getStartDateTimeString() + ". ");
 		}

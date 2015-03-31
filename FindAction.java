@@ -7,7 +7,8 @@ public class FindAction extends Action {
 	private LinkedList<Field> _fields;
 
 	public FindAction(LinkedList<Field> fields) {
-
+		
+		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.FIND;
 		_fields = fields;
@@ -35,13 +36,14 @@ public class FindAction extends Action {
 			filterWorkingList(field, bufferList);
 
 			if (bufferList.isEmpty()) {
-				_feedback.append("No matches found. ");
+				this._feedback.append("No matches found. ");
 				return;
 			}
 		}
 
 		copyList(bufferList, workingList);
-		_feedback.append(workingList.size() + " matches found. ");
+		this._isSuccess = true;
+		this._feedback.append(workingList.size() + " matches found. ");
 	}
 
 	private void filterWorkingList(Field field, LinkedList<Task> workingList) {
