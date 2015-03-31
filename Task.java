@@ -27,11 +27,15 @@ public class Task {
 	private boolean _isCompleted;
 	private boolean _isOverdue;
 	private boolean _shouldSync;
+	private boolean _hasStartTime;
+	private boolean _hasDueTime;
 	
 	/* Constructors */
 	public Task(String name) {
 		_name = new String(name);
 		_isCompleted = false;
+		_hasDueTime = false;
+		_hasStartTime = false;
 	}
 	
 	/* Mutators */
@@ -108,6 +112,14 @@ public class Task {
 	public void setDueDate(Calendar dueDate) {
 		_dueDate = dueDate;
 		updateIsOverdue();
+	}
+	
+	public void setHasStartTime(boolean hasTime) {
+		_hasStartTime = hasTime;
+	}
+	
+	public void setHasDueTime(boolean hasTime) {
+		_hasDueTime = hasTime;
 	}
 	
 	public void setIsCompleted(boolean isCompleted) {
@@ -241,6 +253,14 @@ public class Task {
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 		return sdf.format(_dueDate.getTime());
+	}
+	
+	public boolean getHasStartTime() {
+		return _hasStartTime;
+	}
+	
+	public boolean getHasDueTime() {
+		return _hasDueTime;
 	}
 	
 	public boolean getIsCompleted() {

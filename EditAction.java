@@ -125,11 +125,13 @@ public class EditAction extends Action {
 		}
 
 		_task.setDueDate(field.getDate());
+		_task.setHasDueTime(true);
 
 		if (!field.isTimeParsed()) {
 			_task.getDueDate().set(Calendar.HOUR_OF_DAY, 23);
 			_task.getDueDate().set(Calendar.MINUTE, 59);
 			_task.getDueDate().set(Calendar.SECOND, 59);
+			_task.setHasDueTime(false);
 		}
 		
 		this._isSuccess = true;
@@ -164,7 +166,6 @@ public class EditAction extends Action {
 			newDate.set(Calendar.MONTH, _task.getDueDate().get(Calendar.MONTH));
 			newDate.set(Calendar.DAY_OF_MONTH,
 					_task.getDueDate().get(Calendar.DAY_OF_MONTH));
-
 		} else {
 			return;
 		}
@@ -175,6 +176,9 @@ public class EditAction extends Action {
 					.append("Due date/time entered is bigger than start date/time of task. ");
 		} else {
 			_task.setDueDate(newDate);
+			if(field.isDateParsed()) {
+				_task.setHasDueTime(true);
+			}
 			this._isSuccess = true;
 			this._feedback.append("Due date set to "
 					+ _task.getDueDateTimeString() + ". ");
@@ -192,11 +196,13 @@ public class EditAction extends Action {
 		}
 
 		_task.setStartDate(field.getDate());
+		_task.setHasStartTime(true);
 
 		if (!field.isTimeParsed()) {
 			_task.getStartDate().set(Calendar.HOUR_OF_DAY, 0);
 			_task.getStartDate().set(Calendar.MINUTE, 0);
 			_task.getStartDate().set(Calendar.SECOND, 0);
+			_task.setHasStartTime(false);
 		}
 		
 		this._isSuccess = true;
@@ -243,6 +249,9 @@ public class EditAction extends Action {
 					.append("Start date/time entered is bigger than due date/time of task. ");
 		} else {
 			_task.setStartDate(newDate);
+			if(field.isTimeParsed()) {
+				_task.setHasDueTime(true);
+			}
 			this._isSuccess = true;
 			this._feedback.append("Start date set to "
 					+ _task.getStartDateTimeString() + ". ");
