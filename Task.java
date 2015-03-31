@@ -21,6 +21,7 @@ public class Task {
 	private String _name; 
 	private String _description;
 	private String _priority;
+	private String _taskID;
 	private Calendar _startDate; 
 	private Calendar _dueDate; 
 	private boolean _isCompleted;
@@ -44,6 +45,10 @@ public class Task {
 	
 	public void setPriority(String priority) {
 		_priority = priority;
+	}
+	
+	public void setTaskID(String taskID) {
+		_taskID = taskID;
 	}
 	
 	public void setStartDate (String startDateString) {
@@ -176,6 +181,10 @@ public class Task {
 			return STRING_PRIORITY_HIGH;
 		}
 		return null;
+	}
+	
+	public String getTaskID() {
+		return _taskID;
 	}
 	
 	public int getPriorityInt() {
