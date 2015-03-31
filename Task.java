@@ -21,7 +21,7 @@ public class Task {
 	private String _name; 
 	private String _description;
 	private String _priority;
-	private String _taskID;
+	private String _googleID;
 	private Calendar _startDate; 
 	private Calendar _dueDate; 
 	private boolean _isCompleted;
@@ -51,8 +51,8 @@ public class Task {
 		_priority = priority;
 	}
 	
-	public void setTaskID(String taskID) {
-		_taskID = taskID;
+	public void setGoogleID(String ID) {
+		_googleID = ID;
 	}
 	
 	public void setStartDate (String startDateString) {
@@ -195,8 +195,8 @@ public class Task {
 		return null;
 	}
 	
-	public String getTaskID() {
-		return _taskID;
+	public String getGoogleID() {
+		return _googleID;
 	}
 	
 	public int getPriorityInt() {
