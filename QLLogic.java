@@ -64,13 +64,14 @@ public class QLLogic {
 		for (int i = 0; i < _workingList.size(); i++) {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
-				System.out
-						.print(_workingList.get(i).getStartDateTimeString() + " ");
+				System.out.print(_workingList.get(i).getStartDateTimeString()
+						+ " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateTimeString() + " ");
+				System.out.print(_workingList.get(i).getDueDateTimeString()
+						+ " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
@@ -114,8 +115,64 @@ public class QLLogic {
 			return _workingList;
 		}
 
+		if (command.trim().substring(0, command.indexOf(' '))
+				.equalsIgnoreCase("sync")
+				|| command.trim().substring(0, command.indexOf(' '))
+						.equalsIgnoreCase("sg")) {
+
+			command = command.substring(command.indexOf(' ')).trim();
+
+			try {
+				if (command.trim().substring(0, command.indexOf(' '))
+						.equalsIgnoreCase("from")) {
+					String userID = command.replaceFirst("from", "").trim();
+					QLGoogleIntegration.syncFrom(userID, "quicklyst",
+							_workingListMaster);
+				} else if (command.trim().substring(0, command.indexOf(' '))
+						.equalsIgnoreCase("to")) {
+					String userID = command.replaceFirst("to", "").trim();
+					QLGoogleIntegration.syncTo(userID, "quicklyst",
+							_workingListMaster);
+				}
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+
+			return _workingList;
+		}
+
+		if (command.trim().substring(0, command.indexOf(' '))
+				.equalsIgnoreCase("load")
+				|| command.trim().substring(0, command.indexOf(' '))
+						.equalsIgnoreCase("l")) {
+
+			String filepath = command.substring(command.indexOf(' ')).trim();
+			
+			try {
+				return setup(filepath);
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+				return _workingList;
+			}
+		}
+
+		if (command.trim().substring(0, command.indexOf(' '))
+				.equalsIgnoreCase("save")
+				|| command.trim().substring(0, command.indexOf(' '))
+						.equalsIgnoreCase("s")) {
+
+			String filepath = command.substring(command.indexOf(' ')).trim();
+			
+			try {
+				QLStorage.saveFile(_workingListMaster, filepath);
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+			return _workingList;
+		}
+
 		CommandParser cp = new CommandParser(command);
-		
+
 		feedback.append(cp.getFeedback().toString());
 
 		Action action = cp.getAction();
@@ -124,15 +181,15 @@ public class QLLogic {
 		}
 
 		action.execute(_workingList, _workingListMaster);
-		
+
 		feedback.append(action.getFeedback().toString());
-		
-		if(action.isSuccess()) {
+
+		if (action.isSuccess()) {
 			QLStorage.saveFile(_workingListMaster, _filepath);
 			updateUndoStack();
 		}
-		
-		//printStack(_undoStack);
+
+		// printStack(_undoStack);
 
 		return _workingList;
 	}
@@ -204,10 +261,10 @@ public class QLLogic {
 			feedback.append(MESSAGE_NOTHING_TO_REDO);
 			return;
 		}
-		
+
 		_workingList = _redoStack.pop();
 		_workingListMaster = _redoStack.pop();
-		
+
 		LinkedList<Task> updatedWL = new LinkedList<Task>();
 		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
@@ -216,7 +273,7 @@ public class QLLogic {
 
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
-		
+
 		_workingList = updatedWL;
 		_workingListMaster = updatedWLM;
 
