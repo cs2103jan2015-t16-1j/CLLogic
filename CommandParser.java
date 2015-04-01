@@ -1,5 +1,6 @@
 import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.regex.Pattern;
 
 public class CommandParser {
 
@@ -78,7 +79,7 @@ public class CommandParser {
 				return;
 			}
 			actionAndFields[1] = actionAndFields[1].trim()
-					.replaceFirst(_taskName, "").trim();
+					.replaceFirst(Pattern.quote(_taskName), "").trim();
 			break;
 		case EDIT:
 		case DELETE:
@@ -102,7 +103,7 @@ public class CommandParser {
 		}
 
 		fieldsString = actionAndFields[1].trim();
-
+		
 		if (fieldsString.charAt(0) != '-' && fieldsString.charAt(0) != ' '
 				&& !fieldsString.equalsIgnoreCase("all")
 				&& !fieldsString.equalsIgnoreCase("y")
@@ -141,7 +142,7 @@ public class CommandParser {
 	}
 
 	private void extractTaskName(String fieldsString) {
-		int indexOfDash = fieldsString.indexOf("-");
+		int indexOfDash = fieldsString.indexOf(" -");
 		String taskName;
 		if (indexOfDash == -1) {
 			taskName = fieldsString;
@@ -191,7 +192,6 @@ public class CommandParser {
 	}
 
 	private void determineFieldsPrim(String fieldsString) {
-		System.out.println(fieldsString);
 
 		if (fieldsString.trim().equalsIgnoreCase("all")) {
 			_fields.add(new Field(FieldType.ALL));
@@ -236,6 +236,7 @@ public class CommandParser {
 		if (spaceAftFieldType != ' ') {
 			_feedback.append("Invalid field type \""
 					+ fieldString.split(" ", 2)[0].trim() + "\". ");
+			return null;
 		}
 
 		String fieldContentString = fieldString.substring(1).trim();
