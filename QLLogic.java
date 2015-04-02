@@ -115,60 +115,70 @@ public class QLLogic {
 			return _workingList;
 		}
 
-		if (command.trim().substring(0, command.indexOf(' '))
-				.equalsIgnoreCase("sync")
-				|| command.trim().substring(0, command.indexOf(' '))
-						.equalsIgnoreCase("sg")) {
+		if (command.indexOf(' ') != -1) {
+			String commandType = command.substring(0, command.indexOf(' '))
+					.trim();
+			if (commandType.equalsIgnoreCase("sync")
+					|| commandType.equalsIgnoreCase("sg")) {
 
-			command = command.substring(command.indexOf(' ')).trim();
+				String content = command.replaceFirst(commandType, "").trim();
 
-			try {
-				if (command.trim().substring(0, command.indexOf(' '))
-						.equalsIgnoreCase("from")) {
-					String userID = command.replaceFirst("from", "").trim();
-					QLGoogleIntegration.syncFrom(userID, "quicklyst",
-							_workingListMaster);
-				} else if (command.trim().substring(0, command.indexOf(' '))
-						.equalsIgnoreCase("to")) {
-					String userID = command.replaceFirst("to", "").trim();
-					QLGoogleIntegration.syncTo(userID, "quicklyst",
-							_workingListMaster);
+				if (content.indexOf(' ') != -1) {
+					String toFrom = content.substring(0, content.indexOf(' '))
+							.trim();
+					String userID = content.replaceFirst(toFrom, "").trim();
+					
+					try {
+						if (toFrom.equalsIgnoreCase("from")) {
+							QLGoogleIntegration.syncFrom(userID, "quicklyst",
+									_workingListMaster);
+							feedback.append("Synced from Google Calendar. ");
+						} else if (toFrom.equalsIgnoreCase("to")) {
+							QLGoogleIntegration.syncTo(userID, "quicklyst",
+									_workingListMaster);
+							feedback.append("Synced to Google Calendar. ");
+						} else {
+							feedback.append("Invalid sync action. ");
+						}
+					} catch (Error e) {
+						feedback.append(e.getMessage());
+					}
+
+				} else {
+					feedback.append("Invalid sync action. ");
 				}
-			} catch (Error e) {
-				feedback.append(e.getMessage());
-			}
 
-			return _workingList;
-		}
-
-		if (command.trim().substring(0, command.indexOf(' '))
-				.equalsIgnoreCase("load")
-				|| command.trim().substring(0, command.indexOf(' '))
-						.equalsIgnoreCase("l")) {
-
-			String filepath = command.substring(command.indexOf(' ')).trim();
-			
-			try {
-				return setup(filepath);
-			} catch (Error e) {
-				feedback.append(e.getMessage());
 				return _workingList;
 			}
 		}
 
-		if (command.trim().substring(0, command.indexOf(' '))
-				.equalsIgnoreCase("save")
-				|| command.trim().substring(0, command.indexOf(' '))
-						.equalsIgnoreCase("s")) {
+		if (command.indexOf(' ') != -1) {
+			String commandType = command.substring(0, command.indexOf(' '))
+					.trim();
+			String filepath = command.replaceFirst(commandType, " ").trim();
 
-			String filepath = command.substring(command.indexOf(' ')).trim();
-			
-			try {
-				QLStorage.saveFile(_workingListMaster, filepath);
-			} catch (Error e) {
-				feedback.append(e.getMessage());
+			if (commandType.equalsIgnoreCase("load")
+					|| commandType.equalsIgnoreCase("l")) {
+
+				try {
+					setup(filepath);
+					feedback.append("Loaded from: " + filepath);
+					return _workingList;
+				} catch (Error e) {
+					feedback.append(e.getMessage());
+					return _workingList;
+				}
+			} else if (commandType.equalsIgnoreCase("save")
+					|| commandType.equalsIgnoreCase("s")) {
+				
+				try {
+					QLStorage.saveFile(_workingListMaster, filepath);
+					feedback.append("Saved to: " + filepath);
+				} catch (Error e) {
+					feedback.append(e.getMessage());
+				}
+				return _workingList;
 			}
-			return _workingList;
 		}
 
 		CommandParser cp = new CommandParser(command);
