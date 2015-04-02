@@ -51,11 +51,14 @@ public class EditAction extends Action {
 				_task.setName(field.getTaskName());
 				this._feedback.append("Task name set to \""
 						+ field.getTaskName() + "\". ");
+				this._isSuccess = true;
 				break;
 			case START_DATE:
 
 				if (field.shouldClearDate()) {
 					_task.setStartDate((Calendar) null);
+					_task.setHasStartTime(false);
+					this._isSuccess = true;
 					this._feedback.append("Start date cleared. ");
 					break;
 				}
@@ -75,6 +78,8 @@ public class EditAction extends Action {
 
 				if (field.shouldClearDate()) {
 					_task.setDueDate((Calendar) null);
+					_task.setHasDueTime(false);
+					this._isSuccess = true;
 					this._feedback.append("Due date cleared. ");
 					break;
 				}
@@ -102,10 +107,12 @@ public class EditAction extends Action {
 					break;
 				} else if (field.getPriority().equalsIgnoreCase("clr")) {
 					_task.setPriority((String) null);
+					this._isSuccess = true;
 					this._feedback.append("Priority cleared. ");
 					break;
 				} else {
 					_task.setPriority(field.getPriority());
+					this._isSuccess = true;
 					this._feedback.append("Priority set to \""
 							+ field.getPriority() + "\". ");
 					break;
@@ -120,7 +127,7 @@ public class EditAction extends Action {
 		if (_task.getStartDate() != null
 				&& field.getDate().compareTo(_task.getStartDate()) < 0) {
 			this._feedback
-					.append("Due date/time entered is bigger than start date/time of task. ");
+					.append("Due date/time entered is smaller than start date/time of task. ");
 			return;
 		}
 
@@ -173,7 +180,7 @@ public class EditAction extends Action {
 		if (_task.getStartDate() != null
 				&& newDate.compareTo(_task.getStartDate()) < 0) {
 			this._feedback
-					.append("Due date/time entered is bigger than start date/time of task. ");
+					.append("Due date/time entered is smaller than start date/time of task. ");
 		} else {
 			_task.setDueDate(newDate);
 			if(field.isDateParsed()) {

@@ -6,6 +6,7 @@ public class CompleteAction extends Action {
 	private FieldCriteria _yesNo;
 
 	public CompleteAction(int taskNumber, FieldCriteria yesNO) {
+		
 		this._feedback = new StringBuilder();
 		this._type = ActionType.COMPLETE;
 		_yesNo = yesNO;
@@ -32,13 +33,15 @@ public class CompleteAction extends Action {
 			} else if (_yesNo == null) {
 				taskToComplete.toggleCompleted();
 			}
-
+			
+			this._isSuccess = true;
 			this._feedback.append("Task #"
 					+ (_taskIndex + 1)
 					+ " is "
 					+ (taskToComplete.getIsCompleted() ? "completed"
 							: "not completed") + ". ");
 		} else {
+			this._isSuccess = false;
 			this._feedback.append("Task # out of range. ");
 			return;
 		}
