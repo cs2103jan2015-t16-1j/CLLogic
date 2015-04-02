@@ -213,35 +213,33 @@ public class Task {
 	}
 
 	public String getStartDateString() {
+		SimpleDateFormat sdf;
 		if (_startDate == null) {
 			return "no start date";
 		}
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(_startDate.getTime());
-	}
-
-	public String getStartDateTimeString() {
-		if (_startDate == null) {
-			return "no start date";
+		
+		if(_hasStartTime) {
+			sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			return sdf.format(_startDate.getTime());
+		} else {
+			sdf = new SimpleDateFormat("dd/MM/yyyy");
+			return sdf.format(_startDate.getTime());
 		}
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-		return sdf.format(_startDate.getTime());
 	}
 
 	public String getDueDateString() {
+		SimpleDateFormat sdf;
 		if (_dueDate == null) {
 			return "no due date";
 		}
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(_dueDate.getTime());
-	}
-
-	public String getDueDateTimeString() {
-		if (_dueDate == null) {
-			return "no due date";
+		
+		if(_hasDueTime) {
+			sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			return sdf.format(_dueDate.getTime());
+		} else {
+			sdf = new SimpleDateFormat("dd/MM/yyyy");
+			return sdf.format(_dueDate.getTime());
 		}
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-		return sdf.format(_dueDate.getTime());
 	}
 
 	public boolean getHasStartTime() {

@@ -53,6 +53,8 @@ public class CommandParser {
 			_feedback.append("Please enter a command. ");
 			return;
 		}
+		
+		convertToPrim(cmdString);
 
 		String[] actionAndFields = cmdString.split(" ", 2);
 
@@ -124,6 +126,10 @@ public class CommandParser {
 		fieldsString = " " + fieldsString;
 
 		determineFieldsPrim(fieldsString);
+	}
+
+	private void convertToPrim(String cmdString) {
+		// TODO Auto-generated method stub
 	}
 
 	private void extractTaskNumber(String fieldsString) {

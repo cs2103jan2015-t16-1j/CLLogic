@@ -14,7 +14,7 @@ public class QLLogic {
 	private static String _filepath;
 
 	/** General methods **/
-	public static LinkedList<Task> setup(String fileName) {
+	public static void setup(String fileName) {
 		_filepath = fileName;
 		_undoStack = new Stack<LinkedList<Task>>();
 		_redoStack = new Stack<LinkedList<Task>>();
@@ -23,7 +23,6 @@ public class QLLogic {
 		copyList(_workingList, _workingListMaster);
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
-		return _workingList;
 	}
 
 	// Stub
@@ -64,13 +63,13 @@ public class QLLogic {
 		for (int i = 0; i < _workingList.size(); i++) {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
-				System.out.print(_workingList.get(i).getStartDateTimeString()
+				System.out.print(_workingList.get(i).getStartDateString()
 						+ " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateTimeString()
+				System.out.print(_workingList.get(i).getDueDateString()
 						+ " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
@@ -97,22 +96,30 @@ public class QLLogic {
 		System.out.println();
 		feedback.setLength(0);
 	}
-
-	public static LinkedList<Task> executeCommand(String command,
+	
+	public static LinkedList<Task> getDisplayList() {
+		return _workingList;
+	}
+	
+	public static LinkedList<Task> getFullList() {
+		return _workingListMaster;
+	}
+	
+	public static void executeCommand(String command,
 			StringBuilder feedback) {
 
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
 			undo(feedback);
 			printStack(_undoStack);
-			return _workingList;
+			return;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
 			redo(feedback);
 			printStack(_undoStack);
-			return _workingList;
+			return;
 		}
 
 		if (command.indexOf(' ') != -1) {
@@ -148,7 +155,7 @@ public class QLLogic {
 					feedback.append("Invalid sync action. ");
 				}
 
-				return _workingList;
+				return;
 			}
 		}
 
@@ -163,10 +170,10 @@ public class QLLogic {
 				try {
 					setup(filepath);
 					feedback.append("Loaded from: " + filepath);
-					return _workingList;
+					return;
 				} catch (Error e) {
 					feedback.append(e.getMessage());
-					return _workingList;
+					return;
 				}
 			} else if (commandType.equalsIgnoreCase("save")
 					|| commandType.equalsIgnoreCase("s")) {
@@ -177,7 +184,7 @@ public class QLLogic {
 				} catch (Error e) {
 					feedback.append(e.getMessage());
 				}
-				return _workingList;
+				return;
 			}
 		}
 
@@ -187,7 +194,7 @@ public class QLLogic {
 
 		Action action = cp.getAction();
 		if (action == null) {
-			return _workingList;
+			return;
 		}
 
 		action.execute(_workingList, _workingListMaster);
@@ -200,8 +207,6 @@ public class QLLogic {
 		}
 
 		// printStack(_undoStack);
-
-		return _workingList;
 	}
 
 	/** Multi-command methods **/

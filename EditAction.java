@@ -142,7 +142,7 @@ public class EditAction extends Action {
 		}
 		
 		this._isSuccess = true;
-		this._feedback.append("Due date set to " + _task.getDueDateTimeString()
+		this._feedback.append("Due date set to " + _task.getDueDateString()
 				+ ". ");
 	}
 
@@ -183,12 +183,12 @@ public class EditAction extends Action {
 					.append("Due date/time entered is smaller than start date/time of task. ");
 		} else {
 			_task.setDueDate(newDate);
-			if(field.isDateParsed()) {
+			if(field.isTimeParsed()) {
 				_task.setHasDueTime(true);
 			}
 			this._isSuccess = true;
 			this._feedback.append("Due date set to "
-					+ _task.getDueDateTimeString() + ". ");
+					+ _task.getDueDateString() + ". ");
 
 		}
 
@@ -213,7 +213,7 @@ public class EditAction extends Action {
 		}
 		
 		this._isSuccess = true;
-		this._feedback.append("Start date set to " + _task.getStartDateTimeString()
+		this._feedback.append("Start date set to " + _task.getStartDateString()
 				+ ". ");
 	}
 
@@ -257,11 +257,11 @@ public class EditAction extends Action {
 		} else {
 			_task.setStartDate(newDate);
 			if(field.isTimeParsed()) {
-				_task.setHasDueTime(true);
+				_task.setHasStartTime(true);
 			}
 			this._isSuccess = true;
 			this._feedback.append("Start date set to "
-					+ _task.getStartDateTimeString() + ". ");
+					+ _task.getStartDateString() + ". ");
 		}
 	}
 
