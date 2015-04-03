@@ -95,6 +95,8 @@ public class CommandParser {
 					.trim();
 			break;
 		case EDIT:
+		case DELETE:
+		case COMPLETE:
 			if (actionAndContents.length == 1) {
 				return;
 			}
@@ -102,13 +104,6 @@ public class CommandParser {
 			actionAndContents[1] = actionAndContents[1].trim()
 					.replaceFirst(String.valueOf(_taskNumber), "").trim();
 			break;
-		case DELETE:
-		case COMPLETE:
-			if (actionAndContents.length == 1) {
-				return;
-			}
-			extractTaskNumber(actionAndContents[1].trim());
-			return;
 		default:
 			break;
 		}
@@ -116,7 +111,7 @@ public class CommandParser {
 		if (actionAndContents.length == 1 || actionAndContents[1].trim().isEmpty()) {
 			return;
 		}
-
+		
 		fieldsString = convertToPrim(actionAndContents[1]).trim();
 		System.out.println(fieldsString);
 		determineActionDetails(fieldsString);

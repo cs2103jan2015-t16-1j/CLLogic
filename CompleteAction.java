@@ -26,14 +26,14 @@ public class CompleteAction extends Action {
 
 			Task taskToComplete = workingList.get(_taskIndex);
 
-			if (_yesNo == true) {
+			if(_yesNo == null) {
+				taskToComplete.toggleCompleted();
+			} else if (_yesNo == true) {
 				taskToComplete.setIsCompleted(true);
 			} else if (_yesNo == false) {
 				taskToComplete.setIsCompleted(false);
-			} else if (_yesNo == null) {
-				taskToComplete.toggleCompleted();
 			}
-			
+				
 			this._isSuccess = true;
 			this._feedback.append("Task #"
 					+ (_taskIndex + 1)

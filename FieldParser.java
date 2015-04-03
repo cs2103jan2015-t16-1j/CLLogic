@@ -32,7 +32,7 @@ public class FieldParser {
 			if (_fieldType == null) {
 				return;
 			}
-			determinContent(typeAndContent[1].trim());
+			determineContent(typeAndContent[1].trim());
 		}
 	}
 
@@ -72,7 +72,7 @@ public class FieldParser {
 		}
 	}
 
-	private void determinContent(String content) {
+	private void determineContent(String content) {
 		if (content.isEmpty()) {
 			return;
 		} else if (_fieldType == FieldType.TASK_NAME) {
@@ -123,6 +123,9 @@ public class FieldParser {
 	private void determineFindDate(String content) {
 		String[] contents = content.split(" ", 2);
 		determineCriteria(contents[0].trim());
+		if(_fieldCriteria == null) {
+			return;
+		}
 		if (contents.length == 2) {
 			if (_fieldCriteria == FieldCriteria.BETWEEN) {
 				determineDateRange(contents[1].trim());
