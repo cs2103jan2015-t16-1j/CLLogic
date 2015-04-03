@@ -5,26 +5,27 @@ import java.util.LinkedList;
 public class FindAction extends Action {
 
 	private LinkedList<Field> _fields;
-
-	public FindAction(LinkedList<Field> fields) {
-		
+	private boolean _findAll;
+	
+	public FindAction(LinkedList<Field> fields, boolean findAll) {
 		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.FIND;
+		_findAll = findAll;
 		_fields = fields;
 	}
 
 	@Override
 	public void execute(LinkedList<Task> workingList,
 			LinkedList<Task> workingListMaster) {
-
-		if (_fields == null || _fields.isEmpty()) {
-			System.out.println("no field");
+		
+		if (_findAll) {
+			copyList(workingListMaster, workingList);
 			return;
 		}
-
-		if (_fields.getFirst().getFieldType() == FieldType.ALL) {
-			copyList(workingListMaster, workingList);
+		
+		if (_fields == null || _fields.isEmpty()) {
+			System.out.println("no field");
 			return;
 		}
 
@@ -173,7 +174,6 @@ public class FindAction extends Action {
 			}
 		}
 		copyList(bufferList, workingList);
-		;
 	}
 
 	private void filterByCompleteStatus(FieldCriteria criteria,
@@ -198,7 +198,6 @@ public class FindAction extends Action {
 			}
 		}
 		copyList(bufferList, workingList);
-		;
 	}
 
 	private void filterByDate(Field field, LinkedList<Task> workingList) {
@@ -280,7 +279,7 @@ public class FindAction extends Action {
 
 	private void filterBySingleDate(Calendar date, FieldType fieldType,
 			FieldCriteria criteria, LinkedList<Task> workingList) {
-
+		
 		if (fieldType == null || criteria == null) {
 			return;
 		}
@@ -309,6 +308,7 @@ public class FindAction extends Action {
 					date.set(Calendar.HOUR_OF_DAY, 23);
 					date.set(Calendar.MINUTE, 59);
 					date.set(Calendar.SECOND, 59);
+					date.set(Calendar.MILLISECOND, 999);
 					if (currTaskDate.compareTo(date) <= 0) {
 						bufferList.add(currTask);
 					}
@@ -317,6 +317,7 @@ public class FindAction extends Action {
 					date.set(Calendar.HOUR_OF_DAY, 0);
 					date.set(Calendar.MINUTE, 0);
 					date.set(Calendar.SECOND, 0);
+					date.set(Calendar.MILLISECOND, 0);
 					if (currTaskDate.compareTo(date) >= 0) {
 						bufferList.add(currTask);
 					}
@@ -325,10 +326,13 @@ public class FindAction extends Action {
 					date.set(Calendar.HOUR_OF_DAY, 0);
 					date.set(Calendar.MINUTE, 0);
 					date.set(Calendar.SECOND, 0);
+					date.set(Calendar.MILLISECOND, 0);
 					currTaskDate = new GregorianCalendar(
 							currTaskDate.get(Calendar.YEAR),
 							currTaskDate.get(Calendar.MONTH),
 							currTaskDate.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+					System.out.println(date.getTime().toString());
+					System.out.println(currTaskDate.getTime().toString());
 					if (currTaskDate.equals(date)) {
 						bufferList.add(currTask);
 					}

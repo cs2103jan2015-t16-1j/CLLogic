@@ -1,5 +1,5 @@
-import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class CommandParser {
@@ -10,10 +10,18 @@ public class CommandParser {
 	private int _taskNumber;
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
-	private FieldCriteria _yesNo;
-	
-	private boolean _dateParsed;
-	private boolean _timeParsed;
+
+	private Boolean _completeYesNo;
+	private boolean _findAll;
+
+	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
+			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" },
+			{ "by", "-d" }, { "end", "-d" }, { "priority", "-p" },
+			{ "prio", "-p" }, { "remind", "-r" }, { "overdue", "-o" },
+			{ "completed", "-c" }, { "high", "h" }, { "medium", "m" },
+			{ "low", "l" }, { "yes", "y" }, { "no", "n" }, { "before", "bf" },
+			{ "after", "af" }, { "on", "on" }, { "between", "btw" },
+			{ "and", "&" }, { "today", "tdy" }, { "tomorrow", "tmr" } };
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -39,12 +47,16 @@ public class CommandParser {
 		case SORT:
 			return new SortAction(_fields);
 		case FIND:
-			return new FindAction(_fields);
+			return new FindAction(_fields, _findAll);
 		case COMPLETE:
-			return new CompleteAction(_taskNumber, _yesNo);
+			return new CompleteAction(_taskNumber, _completeYesNo);
 		default:
 			return null;
 		}
+	}
+	
+	public LinkedList<Field> getFields() {
+		return _fields;
 	}
 
 	private void processCmdString(String cmdString) {
@@ -53,13 +65,10 @@ public class CommandParser {
 			_feedback.append("Please enter a command. ");
 			return;
 		}
-		
-		convertToPrim(cmdString);
 
-		String[] actionAndFields = cmdString.split(" ", 2);
+		String[] actionAndContents = cmdString.split(" ", 2);
 
-		String actionString = actionAndFields[0].trim();
-
+		String actionString = actionAndContents[0].trim();
 		determineActionType(actionString);
 
 		if (_actionType == null) {
@@ -71,65 +80,56 @@ public class CommandParser {
 
 		switch (_actionType) {
 		case ADD:
-			if (actionAndFields.length == 1) {
+			if (actionAndContents.length == 1) {
 				_feedback.append("No task name entered. ");
 				return;
 			}
-			extractTaskName(actionAndFields[1].trim());
+			System.out.println(actionAndContents[1]);
+			extractTaskName(actionAndContents[1].trim());
 			if (_taskName == null) {
 				_feedback.append("No task name entered. ");
 				return;
 			}
-			actionAndFields[1] = actionAndFields[1].trim()
-					.replaceFirst(Pattern.quote(_taskName), "").trim();
+			actionAndContents[1] = actionAndContents[1].trim()
+					.replaceFirst(Pattern.quote("\"" + _taskName + "\""), "")
+					.trim();
 			break;
 		case EDIT:
-		case DELETE:
-		case COMPLETE:
-			if (actionAndFields.length == 1) {
+			if (actionAndContents.length == 1) {
 				return;
 			}
-			extractTaskNumber(actionAndFields[1].trim());
-			actionAndFields[1] = actionAndFields[1].trim()
+			extractTaskNumber(actionAndContents[1].trim());
+			actionAndContents[1] = actionAndContents[1].trim()
 					.replaceFirst(String.valueOf(_taskNumber), "").trim();
 			break;
+		case DELETE:
+		case COMPLETE:
+			if (actionAndContents.length == 1) {
+				return;
+			}
+			extractTaskNumber(actionAndContents[1].trim());
+			return;
 		default:
 			break;
 		}
 
-		if (actionAndFields.length == 1 || actionAndFields[1].trim().isEmpty()) {
-			/*
-			 * unnecessary _feedback.append("No fields entered. ");
-			 */
+		if (actionAndContents.length == 1 || actionAndContents[1].trim().isEmpty()) {
 			return;
 		}
 
-		fieldsString = actionAndFields[1].trim();
-		
-		if (fieldsString.charAt(0) != '-' && fieldsString.charAt(0) != ' '
-				&& !fieldsString.equalsIgnoreCase("all")
-				&& !fieldsString.equalsIgnoreCase("y")
-				&& !fieldsString.equalsIgnoreCase("n")) {
-			int indexDash = fieldsString.indexOf('-');
-			String wrongFields;
-			if (indexDash != -1) {
-				wrongFields = fieldsString.substring(0,
-						fieldsString.indexOf('-'));
-			} else {
-				wrongFields = fieldsString;
-			}
-			_feedback.append("Invalid field format in \"" + wrongFields
-					+ "\". ");
-			fieldsString = fieldsString.replaceFirst(wrongFields, "");
-		}
-
-		fieldsString = " " + fieldsString;
-
-		determineFieldsPrim(fieldsString);
+		fieldsString = convertToPrim(actionAndContents[1]).trim();
+		System.out.println(fieldsString);
+		determineActionDetails(fieldsString);
 	}
 
-	private void convertToPrim(String cmdString) {
-		// TODO Auto-generated method stub
+	private String convertToPrim(String cmdString) {
+		for (String[] conversion : CONVERSION_TABLE) {
+			String natForm = conversion[0];
+			String primForm = conversion[1];
+			cmdString = cmdString.replaceFirst(
+					"\\b" + "(?i)" + natForm + "\\b", primForm);
+		}
+		return cmdString;
 	}
 
 	private void extractTaskNumber(String fieldsString) {
@@ -148,17 +148,30 @@ public class CommandParser {
 	}
 
 	private void extractTaskName(String fieldsString) {
-		int indexOfDash = fieldsString.indexOf(" -");
-		String taskName;
-		if (indexOfDash == -1) {
-			taskName = fieldsString;
-		} else {
-			taskName = fieldsString.substring(0, indexOfDash).trim();
+		int quoteStart = -1, quoteEnd = -1;
+		int i, j;
+		for (i = 0; i < fieldsString.length(); i++) {
+			if (fieldsString.charAt(i) == 34) {
+				quoteStart = i;
+				break;
+			}
 		}
-		if (taskName.equals("") || taskName == null) {
+
+		for (j = fieldsString.length() - 1; j >= 0 && j > i; j--) {
+			if (fieldsString.charAt(j) == 34) {
+				quoteEnd = j;
+				break;
+			}
+		}
+
+		System.out.println(quoteStart + " " + quoteEnd);
+
+		if (quoteStart == -1 || quoteEnd == -1) {
+			_feedback.append("Please enclose task name with \" \". ");
 			return;
+		} else {
+			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd);
 		}
-		_taskName = taskName;
 	}
 
 	private void determineActionType(String actionString) {
@@ -197,29 +210,23 @@ public class CommandParser {
 		}
 	}
 
-	private void determineFieldsPrim(String fieldsString) {
+	private void determineActionDetails(String fieldsString) {
 
-		if (fieldsString.trim().equalsIgnoreCase("all")) {
-			_fields.add(new Field(FieldType.ALL));
-			return;
-		}
+		determineNonFieldInputs(fieldsString);
+		fieldsString = removeWrongInputs(fieldsString);
+		determineFields(fieldsString);
+	}
 
-		if (fieldsString.trim().equalsIgnoreCase("y")) {
-			_yesNo = FieldCriteria.YES;
-			return;
-		}
-
-		if (fieldsString.trim().equalsIgnoreCase("n")) {
-			_yesNo = FieldCriteria.NO;
-			return;
-		}
-
-		String[] fieldStringArray = fieldsString.split(" -");
+	private void determineFields(String fieldsString) {
+		String[] fieldStringArray = fieldsString.split("-");
 
 		for (String fieldString : fieldStringArray) {
 			fieldString = fieldString.trim();
-			if (!fieldString.equals("")) {
-				Field field = parseField(fieldString);
+			if (!fieldString.isEmpty()) {
+				FieldParser fp = new FieldParser(fieldString);
+				fp.setActionType(_actionType);
+				Field field = fp.getField();
+				_feedback.append(fp.getFeedback());
 				if (field != null) {
 					_fields.add(field);
 				}
@@ -227,8 +234,54 @@ public class CommandParser {
 		}
 	}
 
+	private void determineNonFieldInputs(String fieldsString) {
+		switch (_actionType) {
+		case FIND:
+			if (fieldsString.trim().equalsIgnoreCase("all")) {
+				_findAll = true;
+			} else {
+				_findAll = false;
+			}
+			break;
+
+		case COMPLETE:
+			if (fieldsString.trim().equalsIgnoreCase("y")) {
+				_completeYesNo = true;
+			} else if (fieldsString.trim().equalsIgnoreCase("n")) {
+				_completeYesNo = false;
+			} else {
+				_completeYesNo = null;
+			}
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	private String removeWrongInputs(String fieldsString) {
+		if (fieldsString.charAt(0) != '-'
+				&& !fieldsString.equalsIgnoreCase("all")
+				&& !fieldsString.equalsIgnoreCase("y")
+				&& !fieldsString.equalsIgnoreCase("n")) {
+			int indexDash = fieldsString.indexOf('-');
+			String wrongFields;
+			if (indexDash != -1) {
+				wrongFields = fieldsString.substring(0,
+						fieldsString.indexOf('-'));
+			} else {
+				wrongFields = fieldsString;
+			}
+			_feedback.append("Invalid field format in \"" + wrongFields
+					+ "\". ");
+			fieldsString = fieldsString.replaceFirst(wrongFields, "");
+		}
+		return fieldsString;
+	}
+
+	/* old implementation
 	private Field parseField(String fieldString) {
-		/* Assertion */
+
 		assert !fieldString.equals("");
 
 		// empty field will not be added to field list
@@ -289,19 +342,25 @@ public class CommandParser {
 					dateString = criteriaAndDate[0].trim();
 				}
 
+				DateParser dateParser = new DateParser(dateString);
+				fieldContent = dateParser.getDateTime();
+				_feedback.append(dateParser.getFeedback());
+
 				if (fieldCriteria == FieldCriteria.BETWEEN) {
+					System.out.println(dateString);
 					String fromAndTo[] = dateString.split("&", 2);
 					if (fromAndTo.length == 1) {
 						_feedback.append("Date range not valid");
+						fieldContent = null;
 					} else {
-
+						System.out.println(fromAndTo[0].trim());
+						System.out.println(fromAndTo[1].trim());
 						DateParser fromDateParser = new DateParser(
 								fromAndTo[0].trim());
 						DateParser toDateParser = new DateParser(
 								fromAndTo[1].trim());
 						Calendar fromDate = fromDateParser.getDateTime();
 						Calendar toDate = toDateParser.getDateTime();
-
 						_feedback.append(fromDateParser.getFeedback());
 						_feedback.append(toDateParser.getFeedback());
 
@@ -309,31 +368,29 @@ public class CommandParser {
 							Calendar[] dateRange = {
 									fromDateParser.getDateTime(),
 									toDateParser.getDateTime() };
+							System.out.println(dateRange[0].getTime());
+							System.out.println(dateRange[1].getTime());
 							fieldContent = dateRange;
 						}
 					}
 				}
 				break;
-			}
-				
-			String dateString = fieldContentString;
-
-			if (dateString.equalsIgnoreCase("clr")) {
-				fieldCriteria = FieldCriteria.CLEAR_DATE;
-			} else if (dateString.equalsIgnoreCase("a")
-					|| dateString.equalsIgnoreCase("d")) {
-				fieldCriteria = determineFieldCriteria(dateString);
 			} else {
-				DateParser dateParser = new DateParser(dateString);
-				Calendar dateTime = dateParser.getDateTime();
-				_dateParsed = dateParser.isDateParsed();
-				_timeParsed = dateParser.isTimeParsed();
-				_feedback.append(dateParser.getFeedback());
-				if (dateTime != null) {
-					fieldContent = dateTime;
+				String dateString = fieldContentString;
+				if (dateString.equalsIgnoreCase("clr")) {
+					fieldCriteria = FieldCriteria.CLEAR_DATE;
+				} else if (dateString.equalsIgnoreCase("a")
+						|| dateString.equalsIgnoreCase("d")) {
+					fieldCriteria = determineFieldCriteria(dateString);
+				} else {
+					DateParser dateParser = new DateParser(dateString);
+					fieldContent = dateParser.getDateTime();
+					_dateParsed = dateParser.isDateParsed();
+					_timeParsed = dateParser.isTimeParsed();
+					_feedback.append(dateParser.getFeedback());
 				}
+				break;
 			}
-			break;
 
 		case 'l':
 
@@ -401,6 +458,8 @@ public class CommandParser {
 			return null;
 		}
 	}
+	
+	
 
 	private FieldCriteria determineFieldCriteria(String criteriaString) {
 		if (criteriaString.equalsIgnoreCase("a")) {
@@ -424,7 +483,19 @@ public class CommandParser {
 			return null;
 		}
 	}
+	*/
 
 	public static void main(String args[]) {
+		Scanner sc = new Scanner(System.in);
+
+		while (true) {
+			String cmd = sc.nextLine();
+			CommandParser cp = new CommandParser(cmd);
+			System.out.println("feedback: " + cp.getFeedback());
+			for(Field field: cp.getFields()) {
+				System.out.println(field);
+			}
+
+		}
 	}
 }

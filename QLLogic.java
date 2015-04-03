@@ -189,6 +189,11 @@ public class QLLogic {
 		}
 
 		CommandParser cp = new CommandParser(command);
+		
+		// test
+		for(Field field: cp.getFields()) {
+			System.out.println(field);
+		}
 
 		feedback.append(cp.getFeedback().toString());
 

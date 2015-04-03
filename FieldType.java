@@ -2,14 +2,12 @@ public enum FieldType {
 	
 	TASK_NAME("task name"),
 	START_DATE("start date"),
-	DUE_DATE("end date"),
-	DATE_RANGE("date range"),
+	DUE_DATE("due date"),
 	PRIORITY("priority"),
 	REMINDER("reminder"),
 	DURATION("duration"),
 	COMPLETED("completed"),
-	OVERDUE("overdue"),
-	ALL("all");
+	OVERDUE("overdue");
 	
 	private String _name;
 	

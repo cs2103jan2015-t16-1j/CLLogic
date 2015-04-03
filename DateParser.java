@@ -27,7 +27,7 @@ public class DateParser {
 	}
 
 	private void parseDateTime(String dateTimeStr) {
-
+		
 		if (dateTimeStr.contains(":") && dateTimeStr.contains("/")) {
 
 			try {

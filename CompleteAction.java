@@ -3,9 +3,9 @@ import java.util.LinkedList;
 public class CompleteAction extends Action {
 
 	private int _taskIndex;
-	private FieldCriteria _yesNo;
+	private Boolean _yesNo;
 
-	public CompleteAction(int taskNumber, FieldCriteria yesNO) {
+	public CompleteAction(int taskNumber, Boolean yesNO) {
 		
 		this._feedback = new StringBuilder();
 		this._type = ActionType.COMPLETE;
@@ -26,9 +26,9 @@ public class CompleteAction extends Action {
 
 			Task taskToComplete = workingList.get(_taskIndex);
 
-			if (_yesNo == FieldCriteria.YES) {
+			if (_yesNo == true) {
 				taskToComplete.setIsCompleted(true);
-			} else if (_yesNo == FieldCriteria.NO) {
+			} else if (_yesNo == false) {
 				taskToComplete.setIsCompleted(false);
 			} else if (_yesNo == null) {
 				taskToComplete.toggleCompleted();

@@ -105,7 +105,7 @@ public class EditAction extends Action {
 			case PRIORITY:
 				if (field.getPriority() == null) {
 					break;
-				} else if (field.getPriority().equalsIgnoreCase("clr")) {
+				} else if (field.shouldClearPriority()) {
 					_task.setPriority((String) null);
 					this._isSuccess = true;
 					this._feedback.append("Priority cleared. ");
