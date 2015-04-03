@@ -8,12 +8,6 @@ public class Task {
 	private static final String STRING_PRIORITY_MEDIUM = "M";
 	private static final String STRING_PRIORITY_LOW = "L";
 
-	private static final int NUM_0_SEC = 0;
-	private static final int NUM_0_MIN = 0;
-	private static final int NUM_0_HOUR = 0;
-	private static final int NUM_59_SEC = 59;
-	private static final int NUM_59_MIN = 59;
-	private static final int NUM_23_HOUR = 23;
 	private static final int NUM_PRIORITY_HIGH = 3;
 	private static final int NUM_PRIORITY_MEDIUM = 2;
 	private static final int NUM_PRIORITY_LOW = 1;
@@ -53,50 +47,6 @@ public class Task {
 
 	public void setGoogleID(String ID) {
 		_googleID = ID;
-	}
-
-	public void setStartDate(String startDateString) {
-		Calendar startDate = DateHandler.convertToDateCalendar(startDateString);
-		startDate.set(Calendar.HOUR_OF_DAY, NUM_0_HOUR);
-		startDate.set(Calendar.MINUTE, NUM_0_MIN);
-		startDate.set(Calendar.SECOND, NUM_0_SEC);
-		_startDate = startDate;
-
-		// older implementation
-		/*
-		 * int startDateInt =
-		 * DateHandler.changeFromDateStringToDateInt(startDateString);
-		 * 
-		 * int startDay = DateHandler.decodeDayFromDateInt(startDateInt); int
-		 * startMonth = DateHandler.decodeMonthFromDateInt(startDateInt); int
-		 * startYear = DateHandler.decodeYearFromDateInt(startDateInt);
-		 * 
-		 * _startDate = new GregorianCalendar(startYear, startMonth +
-		 * OFFSET_CALENDAR_MONTH, startDay, NUM_0_HOUR, NUM_0_MIN, NUM_0_SEC);
-		 */
-	}
-
-	public void setDueDate(String dueDateString) {
-		Calendar dueDate = DateHandler.convertToDateCalendar(dueDateString);
-		dueDate.set(Calendar.HOUR_OF_DAY, NUM_23_HOUR);
-		dueDate.set(Calendar.MINUTE, NUM_59_MIN);
-		dueDate.set(Calendar.SECOND, NUM_59_SEC);
-		_dueDate = dueDate;
-
-		// older implementation
-		/*
-		 * int dueDateInt =
-		 * DateHandler.changeFromDateStringToDateInt(dueDateString);
-		 * 
-		 * int dueDay = DateHandler.decodeDayFromDateInt(dueDateInt); int
-		 * dueMonth = DateHandler.decodeMonthFromDateInt(dueDateInt); int
-		 * dueYear = DateHandler.decodeYearFromDateInt(dueDateInt);
-		 * 
-		 * _dueDate = new GregorianCalendar(dueYear, dueMonth +
-		 * OFFSET_CALENDAR_MONTH, dueDay, NUM_23_HOUR, NUM_59_MIN, NUM_59_SEC);
-		 */
-
-		updateIsOverdue();
 	}
 
 	public void setStartDate(Calendar startDate) {
