@@ -74,7 +74,7 @@ public class FieldParser {
 			return;
 		} else if (_fieldType == FieldType.TASK_NAME) {
 
-			_fieldContent = content.replaceAll(Pattern.quote("\""), "");
+			_fieldContent = content.replaceAll(Pattern.quote("\\"), "");
 
 		} else if (_fieldType == FieldType.DUE_DATE
 				|| _fieldType == FieldType.START_DATE

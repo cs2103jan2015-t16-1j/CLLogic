@@ -9,30 +9,43 @@ public class QLLogic {
 
 	public static LinkedList<Task> _workingList; // TODO change back to private
 	private static LinkedList<Task> _workingListMaster;
+	private static String _filepath;
+	
+	/*
 	private static Stack<LinkedList<Task>> _undoStack;
 	private static Stack<LinkedList<Task>> _redoStack;
-	private static String _filepath;
+	*/
+	
+	private static HistoryManager _historyMgnr;
 
 	/** General methods **/
 	public static void setup(String fileName) {
 		_filepath = fileName;
-		_undoStack = new Stack<LinkedList<Task>>();
-		_redoStack = new Stack<LinkedList<Task>>();
 		_workingList = QLStorage.loadFile(new LinkedList<Task>(), fileName);
 		_workingListMaster = new LinkedList<Task>();
 		copyList(_workingList, _workingListMaster);
+		_historyMgnr = new HistoryManager(_workingList, _workingListMaster);
+		
+		/*
+		_undoStack = new Stack<LinkedList<Task>>();
+		_redoStack = new Stack<LinkedList<Task>>();
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
+		*/
 	}
 
 	// Stub
 	public static void setupStub() {
-		_undoStack = new Stack<LinkedList<Task>>();
-		_redoStack = new Stack<LinkedList<Task>>();
 		_workingList = new LinkedList<Task>();
 		_workingListMaster = new LinkedList<Task>();
+		_historyMgnr = new HistoryManager(_workingList, _workingListMaster);
+		
+		/*
+		_undoStack = new Stack<LinkedList<Task>>();
+		_redoStack = new Stack<LinkedList<Task>>();
 		_undoStack.push(new LinkedList<Task>());
 		_undoStack.push(new LinkedList<Task>());
+		*/
 	}
 
 	// stub
@@ -108,15 +121,19 @@ public class QLLogic {
 
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
-			undo(feedback);
-			printStack(_undoStack);
+			_historyMgnr.undo(feedback);
+			_workingList = _historyMgnr.getDisplayList();
+			_workingListMaster = _historyMgnr.getMasterList();
+			//printStack(_undoStack);
 			return;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
-			redo(feedback);
-			printStack(_undoStack);
+			_historyMgnr.redo(feedback);
+			_workingList = _historyMgnr.getDisplayList();
+			_workingListMaster = _historyMgnr.getMasterList();
+			//printStack(_undoStack);
 			return;
 		}
 
@@ -206,21 +223,22 @@ public class QLLogic {
 		
 		if (action.isSuccess()) {
 			QLStorage.saveFile(_workingListMaster, _filepath);
-			updateUndoStack();
+			_historyMgnr.updateUndoStack(_workingList, _workingListMaster);
 		}
 
 		// printStack(_undoStack);
 	}
 
 	/** Multi-command methods **/
-
+	
 	private static <E> void copyList(LinkedList<E> fromList,
 			LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-
+	
+	/*
 	private static void copyListWithClone(LinkedList<Task> list,
 			LinkedList<Task> listMaster, LinkedList<Task> listNew,
 			LinkedList<Task> listMasterNew) {
@@ -298,6 +316,7 @@ public class QLLogic {
 
 		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
+	*/
 
 	/** Main method **/
 	@SuppressWarnings("resource")
