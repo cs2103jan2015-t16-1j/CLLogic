@@ -7,12 +7,14 @@ public class EditAction extends Action {
 	private int _taskIndex;
 	private LinkedList<Field> _fields;
 	private Task _task;
+	private SortAction _defaultSort;
 
 	public EditAction(int taskNumber, LinkedList<Field> fields) {
 		
 		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
+		_defaultSort = new SortAction();
 
 		if (taskNumber != 0) {
 			_taskIndex = taskNumber - 1;
@@ -24,26 +26,34 @@ public class EditAction extends Action {
 	}
 
 	public EditAction(Task task, LinkedList<Field> fields) {
-
+		
+		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
 		_task = task;
 		_fields = fields;
+		_defaultSort = new SortAction();
 	}
 
 	@Override
 	public void execute(LinkedList<Task> workingList,
 			LinkedList<Task> workingListMaster) {
-
-		if (isTaskIndexInRange(workingList)) {
+		
+		if(_task != null) {
+			execute();
+		} else if (isTaskIndexInRange(workingList)) {
 			_task = workingList.get(_taskIndex);
 			execute();
 		} else {
 			this._feedback.append("Task # out of range. ");
 		}
+		
+		if(this._isSuccess) {
+			_defaultSort.execute(workingList, workingListMaster);
+		}
 	}
 
-	public void execute() {
+	private void execute() {
 		for (Field field : _fields) {
 			FieldType fieldType = field.getFieldType();
 			switch (fieldType) {

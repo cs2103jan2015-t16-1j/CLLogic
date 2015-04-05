@@ -4,6 +4,14 @@ public class SortAction extends Action {
 
 	private LinkedList<Field> _fields;
 
+	/** default sort action- due date descending **/
+	public SortAction() {
+		this._isSuccess = true;
+		this._type = ActionType.SORT;
+		_fields = new LinkedList<Field>();
+		_fields.add(new Field(FieldType.DUE_DATE, FieldCriteria.ASCEND));
+	}
+	
 	public SortAction(LinkedList<Field> fields) {
 		
 		this._isSuccess = true;

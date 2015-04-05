@@ -63,14 +63,13 @@ public class QLLogic {
 		for (int i = 0; i < _workingList.size(); i++) {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
-				System.out.print(_workingList.get(i).getStartDateString()
-						+ " ");
+				System.out
+						.print(_workingList.get(i).getStartDateString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateString()
-						+ " ");
+				System.out.print(_workingList.get(i).getDueDateString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
@@ -96,17 +95,16 @@ public class QLLogic {
 		System.out.println();
 		feedback.setLength(0);
 	}
-	
+
 	public static LinkedList<Task> getDisplayList() {
 		return _workingList;
 	}
-	
+
 	public static LinkedList<Task> getFullList() {
 		return _workingListMaster;
 	}
-	
-	public static void executeCommand(String command,
-			StringBuilder feedback) {
+
+	public static void executeCommand(String command, StringBuilder feedback) {
 
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
@@ -134,7 +132,7 @@ public class QLLogic {
 					String toFrom = content.substring(0, content.indexOf(' '))
 							.trim();
 					String userID = content.replaceFirst(toFrom, "").trim();
-					
+
 					try {
 						if (toFrom.equalsIgnoreCase("from")) {
 							QLGoogleIntegration.syncFrom(userID, "quicklyst",
@@ -177,7 +175,7 @@ public class QLLogic {
 				}
 			} else if (commandType.equalsIgnoreCase("save")
 					|| commandType.equalsIgnoreCase("s")) {
-				
+
 				try {
 					QLStorage.saveFile(_workingListMaster, filepath);
 					feedback.append("Saved to: " + filepath);
@@ -189,23 +187,22 @@ public class QLLogic {
 		}
 
 		CommandParser cp = new CommandParser(command);
-		
+		feedback.append(cp.getFeedback().toString());
+
 		// test
-		for(Field field: cp.getFields()) {
+		for (Field field : cp.getFields()) {
 			System.out.println(field);
 		}
 
-		feedback.append(cp.getFeedback().toString());
-
 		Action action = cp.getAction();
-		if (action == null) {
+		feedback.append(cp.getFeedback());
+		if(action == null) {
+			
 			return;
 		}
-
 		action.execute(_workingList, _workingListMaster);
-
 		feedback.append(action.getFeedback().toString());
-
+		
 		if (action.isSuccess()) {
 			QLStorage.saveFile(_workingListMaster, _filepath);
 			updateUndoStack();
@@ -223,9 +220,10 @@ public class QLLogic {
 			toList.add(fromList.get(i));
 	}
 
-	private static void copyListsForUndoStack(LinkedList<Task> list,
+	private static void copyListWithClone(LinkedList<Task> list,
 			LinkedList<Task> listMaster, LinkedList<Task> listNew,
 			LinkedList<Task> listMasterNew) {
+		
 		LinkedList<Integer> indexesInListMasterForRepeatTask = new LinkedList<Integer>();
 		for (int i = 0; i < list.size(); i++) {
 			indexesInListMasterForRepeatTask
@@ -243,7 +241,7 @@ public class QLLogic {
 	private static void updateUndoStack() {
 		LinkedList<Task> workingListMaster = new LinkedList<Task>();
 		LinkedList<Task> workingList = new LinkedList<Task>();
-		copyListsForUndoStack(_workingList, _workingListMaster, workingList,
+		copyListWithClone(_workingList, _workingListMaster, workingList,
 				workingListMaster);
 
 		_undoStack.push(workingListMaster);
@@ -264,7 +262,7 @@ public class QLLogic {
 		LinkedList<Task> updatedWL = new LinkedList<Task>();
 		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
-		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
+		copyListWithClone(_workingList, _workingListMaster, updatedWL,
 				updatedWLM);
 
 		_undoStack.push(_workingListMaster);
@@ -281,14 +279,14 @@ public class QLLogic {
 			feedback.append(MESSAGE_NOTHING_TO_REDO);
 			return;
 		}
-
-		_workingList = _redoStack.pop();
+		
 		_workingListMaster = _redoStack.pop();
+		_workingList = _redoStack.pop();
 
 		LinkedList<Task> updatedWL = new LinkedList<Task>();
 		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
-		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
+		copyListWithClone(_workingList, _workingListMaster, updatedWL,
 				updatedWLM);
 
 		_undoStack.push(_workingListMaster);

@@ -6,9 +6,11 @@ public class FindAction extends Action {
 
 	private LinkedList<Field> _fields;
 	private boolean _findAll;
-	
+	private boolean _lastSearch;
+
 	public FindAction(LinkedList<Field> fields, boolean findAll) {
 		this._isSuccess = false;
+		_lastSearch = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.FIND;
 		_findAll = findAll;
@@ -18,12 +20,13 @@ public class FindAction extends Action {
 	@Override
 	public void execute(LinkedList<Task> workingList,
 			LinkedList<Task> workingListMaster) {
-		
+
 		if (_findAll) {
 			copyList(workingListMaster, workingList);
+			this._isSuccess = true;
 			return;
 		}
-		
+
 		if (_fields == null || _fields.isEmpty()) {
 			System.out.println("no field");
 			return;
@@ -45,6 +48,7 @@ public class FindAction extends Action {
 		copyList(bufferList, workingList);
 		this._isSuccess = true;
 		this._feedback.append(workingList.size() + " matches found. ");
+		new SortAction().execute(workingList, workingListMaster);
 	}
 
 	private void filterWorkingList(Field field, LinkedList<Task> workingList) {
@@ -89,6 +93,7 @@ public class FindAction extends Action {
 			filterByName(taskName, workingList);
 			break;
 		default:
+			_feedback.append("Invalid field. ");
 			return;
 		}
 	}
@@ -279,7 +284,7 @@ public class FindAction extends Action {
 
 	private void filterBySingleDate(Calendar date, FieldType fieldType,
 			FieldCriteria criteria, LinkedList<Task> workingList) {
-		
+
 		if (fieldType == null || criteria == null) {
 			return;
 		}
@@ -346,7 +351,7 @@ public class FindAction extends Action {
 		copyList(bufferList, workingList);
 	}
 
-	private static <E> void copyList(LinkedList<E> fromList,
+	private <E> void copyList(LinkedList<E> fromList,
 			LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)

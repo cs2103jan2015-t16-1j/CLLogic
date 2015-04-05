@@ -4,5 +4,9 @@ public enum ActionType {
 	EDIT, 
 	SORT,
 	FIND,
-	COMPLETE;
+	COMPLETE,
+	UNDO,
+	REDO,
+	SAVE,
+	SYNC;
 }

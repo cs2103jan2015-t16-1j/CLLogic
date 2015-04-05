@@ -21,5 +21,9 @@ public enum FieldCriteria {
 	CLEAR_DATE,
 	
 	//priority
-	CLEAR_PRIORITY;
+	CLEAR_PRIORITY,
+	
+	//sync
+	TO,
+	FROM;
 }

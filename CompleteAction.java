@@ -45,7 +45,6 @@ public class CompleteAction extends Action {
 			this._feedback.append("Task # out of range. ");
 			return;
 		}
-
 	}
 
 	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {

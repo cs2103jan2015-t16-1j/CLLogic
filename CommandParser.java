@@ -14,14 +14,15 @@ public class CommandParser {
 	private Boolean _completeYesNo;
 	private boolean _findAll;
 
-	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
-			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" },
-			{ "by", "-d" }, { "end", "-d" }, { "priority", "-p" },
-			{ "prio", "-p" }, { "remind", "-r" }, { "overdue", "-o" },
-			{ "completed", "-c" }, { "high", "h" }, { "medium", "m" },
-			{ "low", "l" }, { "yes", "y" }, { "no", "n" }, { "before", "bf" },
-			{ "after", "af" }, { "on", "on" }, { "between", "btw" },
-			{ "and", "&" }, { "today", "tdy" }, { "tomorrow", "tmr" } };
+	private static final String[][] CONVERSION_TABLE = { { "name", "-n" },
+			{ "from", "-s" }, { "start", "-s" }, { "to", "-d" },
+			{ "due", "-d" }, { "by", "-d" }, { "end", "-d" },
+			{ "priority", "-p" }, { "prio", "-p" }, { "remind", "-r" },
+			{ "overdue", "-o" }, { "completed", "-c" }, { "high", "h" },
+			{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
+			{ "before", "bf" }, { "after", "af" }, { "on", "on" },
+			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
+			{ "tomorrow", "tmr" } };
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -37,6 +38,7 @@ public class CommandParser {
 		if (_actionType == null) {
 			return null;
 		}
+
 		switch (_actionType) {
 		case ADD:
 			return new AddAction(_taskName, _fields);
@@ -54,7 +56,7 @@ public class CommandParser {
 			return null;
 		}
 	}
-	
+
 	public LinkedList<Field> getFields() {
 		return _fields;
 	}
@@ -108,10 +110,11 @@ public class CommandParser {
 			break;
 		}
 
-		if (actionAndContents.length == 1 || actionAndContents[1].trim().isEmpty()) {
+		if (actionAndContents.length == 1
+				|| actionAndContents[1].trim().isEmpty()) {
 			return;
 		}
-		
+
 		fieldsString = convertToPrim(actionAndContents[1]).trim();
 		System.out.println(fieldsString);
 		determineActionDetails(fieldsString);
@@ -274,211 +277,136 @@ public class CommandParser {
 		return fieldsString;
 	}
 
-	/* old implementation
-	private Field parseField(String fieldString) {
-
-		assert !fieldString.equals("");
-
-		// empty field will not be added to field list
-		if (fieldString.length() == 1) {
-			return null;
-		}
-
-		char fieldTypeChar = fieldString.charAt(0);
-		char spaceAftFieldType = fieldString.charAt(1);
-
-		if (spaceAftFieldType != ' ') {
-			_feedback.append("Invalid field type \""
-					+ fieldString.split(" ", 2)[0].trim() + "\". ");
-			return null;
-		}
-
-		String fieldContentString = fieldString.substring(1).trim();
-
-		if (fieldContentString.equals("")) {
-			return null;
-		}
-
-		FieldType fieldType = null;
-		Object fieldContent = null;
-		FieldCriteria fieldCriteria = null;
-
-		switch (fieldTypeChar) {
-		case 'd':
-		case 's':
-		case 'r':
-
-			switch (fieldTypeChar) {
-			case 'd':
-				fieldType = FieldType.DUE_DATE;
-				break;
-			case 's':
-				fieldType = FieldType.START_DATE;
-				break;
-			case 'r':
-				fieldType = FieldType.REMINDER;
-				break;
-			default:
-				fieldType = null;
-				break;
-			}
-
-			if (_actionType == ActionType.FIND) {
-				String criteriaAndDate[] = fieldContentString.split(" ", 2);
-
-				String dateString;
-				String criteriaString;
-
-				if (criteriaAndDate.length == 2) {
-					dateString = criteriaAndDate[1].trim();
-					criteriaString = criteriaAndDate[0].trim();
-					fieldCriteria = determineFieldCriteria(criteriaString);
-				} else {
-					dateString = criteriaAndDate[0].trim();
-				}
-
-				DateParser dateParser = new DateParser(dateString);
-				fieldContent = dateParser.getDateTime();
-				_feedback.append(dateParser.getFeedback());
-
-				if (fieldCriteria == FieldCriteria.BETWEEN) {
-					System.out.println(dateString);
-					String fromAndTo[] = dateString.split("&", 2);
-					if (fromAndTo.length == 1) {
-						_feedback.append("Date range not valid");
-						fieldContent = null;
-					} else {
-						System.out.println(fromAndTo[0].trim());
-						System.out.println(fromAndTo[1].trim());
-						DateParser fromDateParser = new DateParser(
-								fromAndTo[0].trim());
-						DateParser toDateParser = new DateParser(
-								fromAndTo[1].trim());
-						Calendar fromDate = fromDateParser.getDateTime();
-						Calendar toDate = toDateParser.getDateTime();
-						_feedback.append(fromDateParser.getFeedback());
-						_feedback.append(toDateParser.getFeedback());
-
-						if (fromDate != null && toDate != null) {
-							Calendar[] dateRange = {
-									fromDateParser.getDateTime(),
-									toDateParser.getDateTime() };
-							System.out.println(dateRange[0].getTime());
-							System.out.println(dateRange[1].getTime());
-							fieldContent = dateRange;
-						}
-					}
-				}
-				break;
-			} else {
-				String dateString = fieldContentString;
-				if (dateString.equalsIgnoreCase("clr")) {
-					fieldCriteria = FieldCriteria.CLEAR_DATE;
-				} else if (dateString.equalsIgnoreCase("a")
-						|| dateString.equalsIgnoreCase("d")) {
-					fieldCriteria = determineFieldCriteria(dateString);
-				} else {
-					DateParser dateParser = new DateParser(dateString);
-					fieldContent = dateParser.getDateTime();
-					_dateParsed = dateParser.isDateParsed();
-					_timeParsed = dateParser.isTimeParsed();
-					_feedback.append(dateParser.getFeedback());
-				}
-				break;
-			}
-
-		case 'l':
-
-			fieldType = FieldType.DURATION;
-			fieldCriteria = determineFieldCriteria(fieldContentString);
-			break;
-
-		case 'p':
-
-			fieldType = FieldType.PRIORITY;
-
-			if (_actionType == ActionType.SORT) {
-				fieldCriteria = determineFieldCriteria(fieldContentString);
-			}
-			if (_actionType == ActionType.ADD || _actionType == ActionType.FIND
-					|| _actionType == ActionType.EDIT) {
-				fieldContent = determinePriority(fieldContentString);
-			}
-			break;
-
-		case 'n':
-
-			fieldType = FieldType.TASK_NAME;
-			fieldContent = fieldContentString;
-			break;
-
-		case 'c':
-
-			fieldType = FieldType.COMPLETED;
-			fieldCriteria = determineFieldCriteria(fieldContentString);
-			break;
-
-		case 'o':
-
-			fieldType = FieldType.OVERDUE;
-			fieldCriteria = determineFieldCriteria(fieldContentString);
-			break;
-
-		default:
-
-			_feedback.append("Invalid field type \"" + fieldTypeChar + "\". ");
-			// null type will not be added to field list
-			return null;
-		}
-
-		// field always has valid field type
-		Field field = new Field(fieldType, fieldContent, fieldCriteria);
-		field.setDateParsed(_dateParsed);
-		field.setTimeParsed(_timeParsed);
-		return field;
-	}
-
-	private String determinePriority(String fieldContentString) {
-		if (fieldContentString.equalsIgnoreCase("l")) {
-			return "L";
-		} else if (fieldContentString.equalsIgnoreCase("m")) {
-			return "M";
-		} else if (fieldContentString.equalsIgnoreCase("H")) {
-			return "H";
-		} else if (fieldContentString.equalsIgnoreCase("clr")) {
-			return "CLR";
-		} else {
-			_feedback.append("Invalid priority level \"" + fieldContentString
-					+ "\". ");
-			return null;
-		}
-	}
-	
-	
-
-	private FieldCriteria determineFieldCriteria(String criteriaString) {
-		if (criteriaString.equalsIgnoreCase("a")) {
-			return FieldCriteria.ASCEND;
-		} else if (criteriaString.equalsIgnoreCase("d")) {
-			return FieldCriteria.DESCEND;
-		} else if (criteriaString.equalsIgnoreCase("bf")) {
-			return FieldCriteria.BEFORE;
-		} else if (criteriaString.equalsIgnoreCase("af")) {
-			return FieldCriteria.AFTER;
-		} else if (criteriaString.equalsIgnoreCase("on")) {
-			return FieldCriteria.ON;
-		} else if (criteriaString.equalsIgnoreCase("btw")) {
-			return FieldCriteria.BETWEEN;
-		} else if (criteriaString.equalsIgnoreCase("y")) {
-			return FieldCriteria.YES;
-		} else if (criteriaString.equalsIgnoreCase("n")) {
-			return FieldCriteria.NO;
-		} else {
-			_feedback.append("Invalid criteria \"" + criteriaString + "\". ");
-			return null;
-		}
-	}
-	*/
+	/*
+	 * old implementation private Field parseField(String fieldString) {
+	 * 
+	 * assert !fieldString.equals("");
+	 * 
+	 * // empty field will not be added to field list if (fieldString.length()
+	 * == 1) { return null; }
+	 * 
+	 * char fieldTypeChar = fieldString.charAt(0); char spaceAftFieldType =
+	 * fieldString.charAt(1);
+	 * 
+	 * if (spaceAftFieldType != ' ') { _feedback.append("Invalid field type \""
+	 * + fieldString.split(" ", 2)[0].trim() + "\". "); return null; }
+	 * 
+	 * String fieldContentString = fieldString.substring(1).trim();
+	 * 
+	 * if (fieldContentString.equals("")) { return null; }
+	 * 
+	 * FieldType fieldType = null; Object fieldContent = null; FieldCriteria
+	 * fieldCriteria = null;
+	 * 
+	 * switch (fieldTypeChar) { case 'd': case 's': case 'r':
+	 * 
+	 * switch (fieldTypeChar) { case 'd': fieldType = FieldType.DUE_DATE; break;
+	 * case 's': fieldType = FieldType.START_DATE; break; case 'r': fieldType =
+	 * FieldType.REMINDER; break; default: fieldType = null; break; }
+	 * 
+	 * if (_actionType == ActionType.FIND) { String criteriaAndDate[] =
+	 * fieldContentString.split(" ", 2);
+	 * 
+	 * String dateString; String criteriaString;
+	 * 
+	 * if (criteriaAndDate.length == 2) { dateString =
+	 * criteriaAndDate[1].trim(); criteriaString = criteriaAndDate[0].trim();
+	 * fieldCriteria = determineFieldCriteria(criteriaString); } else {
+	 * dateString = criteriaAndDate[0].trim(); }
+	 * 
+	 * DateParser dateParser = new DateParser(dateString); fieldContent =
+	 * dateParser.getDateTime(); _feedback.append(dateParser.getFeedback());
+	 * 
+	 * if (fieldCriteria == FieldCriteria.BETWEEN) {
+	 * System.out.println(dateString); String fromAndTo[] =
+	 * dateString.split("&", 2); if (fromAndTo.length == 1) {
+	 * _feedback.append("Date range not valid"); fieldContent = null; } else {
+	 * System.out.println(fromAndTo[0].trim());
+	 * System.out.println(fromAndTo[1].trim()); DateParser fromDateParser = new
+	 * DateParser( fromAndTo[0].trim()); DateParser toDateParser = new
+	 * DateParser( fromAndTo[1].trim()); Calendar fromDate =
+	 * fromDateParser.getDateTime(); Calendar toDate =
+	 * toDateParser.getDateTime();
+	 * _feedback.append(fromDateParser.getFeedback());
+	 * _feedback.append(toDateParser.getFeedback());
+	 * 
+	 * if (fromDate != null && toDate != null) { Calendar[] dateRange = {
+	 * fromDateParser.getDateTime(), toDateParser.getDateTime() };
+	 * System.out.println(dateRange[0].getTime());
+	 * System.out.println(dateRange[1].getTime()); fieldContent = dateRange; } }
+	 * } break; } else { String dateString = fieldContentString; if
+	 * (dateString.equalsIgnoreCase("clr")) { fieldCriteria =
+	 * FieldCriteria.CLEAR_DATE; } else if (dateString.equalsIgnoreCase("a") ||
+	 * dateString.equalsIgnoreCase("d")) { fieldCriteria =
+	 * determineFieldCriteria(dateString); } else { DateParser dateParser = new
+	 * DateParser(dateString); fieldContent = dateParser.getDateTime();
+	 * _dateParsed = dateParser.isDateParsed(); _timeParsed =
+	 * dateParser.isTimeParsed(); _feedback.append(dateParser.getFeedback()); }
+	 * break; }
+	 * 
+	 * case 'l':
+	 * 
+	 * fieldType = FieldType.DURATION; fieldCriteria =
+	 * determineFieldCriteria(fieldContentString); break;
+	 * 
+	 * case 'p':
+	 * 
+	 * fieldType = FieldType.PRIORITY;
+	 * 
+	 * if (_actionType == ActionType.SORT) { fieldCriteria =
+	 * determineFieldCriteria(fieldContentString); } if (_actionType ==
+	 * ActionType.ADD || _actionType == ActionType.FIND || _actionType ==
+	 * ActionType.EDIT) { fieldContent = determinePriority(fieldContentString);
+	 * } break;
+	 * 
+	 * case 'n':
+	 * 
+	 * fieldType = FieldType.TASK_NAME; fieldContent = fieldContentString;
+	 * break;
+	 * 
+	 * case 'c':
+	 * 
+	 * fieldType = FieldType.COMPLETED; fieldCriteria =
+	 * determineFieldCriteria(fieldContentString); break;
+	 * 
+	 * case 'o':
+	 * 
+	 * fieldType = FieldType.OVERDUE; fieldCriteria =
+	 * determineFieldCriteria(fieldContentString); break;
+	 * 
+	 * default:
+	 * 
+	 * _feedback.append("Invalid field type \"" + fieldTypeChar + "\". "); //
+	 * null type will not be added to field list return null; }
+	 * 
+	 * // field always has valid field type Field field = new Field(fieldType,
+	 * fieldContent, fieldCriteria); field.setDateParsed(_dateParsed);
+	 * field.setTimeParsed(_timeParsed); return field; }
+	 * 
+	 * private String determinePriority(String fieldContentString) { if
+	 * (fieldContentString.equalsIgnoreCase("l")) { return "L"; } else if
+	 * (fieldContentString.equalsIgnoreCase("m")) { return "M"; } else if
+	 * (fieldContentString.equalsIgnoreCase("H")) { return "H"; } else if
+	 * (fieldContentString.equalsIgnoreCase("clr")) { return "CLR"; } else {
+	 * _feedback.append("Invalid priority level \"" + fieldContentString +
+	 * "\". "); return null; } }
+	 * 
+	 * 
+	 * 
+	 * private FieldCriteria determineFieldCriteria(String criteriaString) { if
+	 * (criteriaString.equalsIgnoreCase("a")) { return FieldCriteria.ASCEND; }
+	 * else if (criteriaString.equalsIgnoreCase("d")) { return
+	 * FieldCriteria.DESCEND; } else if (criteriaString.equalsIgnoreCase("bf"))
+	 * { return FieldCriteria.BEFORE; } else if
+	 * (criteriaString.equalsIgnoreCase("af")) { return FieldCriteria.AFTER; }
+	 * else if (criteriaString.equalsIgnoreCase("on")) { return
+	 * FieldCriteria.ON; } else if (criteriaString.equalsIgnoreCase("btw")) {
+	 * return FieldCriteria.BETWEEN; } else if
+	 * (criteriaString.equalsIgnoreCase("y")) { return FieldCriteria.YES; } else
+	 * if (criteriaString.equalsIgnoreCase("n")) { return FieldCriteria.NO; }
+	 * else { _feedback.append("Invalid criteria \"" + criteriaString + "\". ");
+	 * return null; } }
+	 */
 
 	public static void main(String args[]) {
 		Scanner sc = new Scanner(System.in);
@@ -487,7 +415,7 @@ public class CommandParser {
 			String cmd = sc.nextLine();
 			CommandParser cp = new CommandParser(cmd);
 			System.out.println("feedback: " + cp.getFeedback());
-			for(Field field: cp.getFields()) {
+			for (Field field : cp.getFields()) {
 				System.out.println(field);
 			}
 

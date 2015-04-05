@@ -263,6 +263,8 @@ public class Task {
 		clonedTask.setIsCompleted(_isCompleted);
 		clonedTask.setPriority(_priority);
 		clonedTask.setIsShouldSync(_shouldSync);
+		clonedTask.setHasDueTime(_hasDueTime);
+		clonedTask.setHasStartTime(_hasStartTime);
 		return clonedTask;
 	}
 }

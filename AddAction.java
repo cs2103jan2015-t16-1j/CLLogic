@@ -4,15 +4,16 @@ public class AddAction extends Action {
 
 	private Task _newTask;
 	private EditAction _editAction;
+	private SortAction _defaultSort;
 
 	public AddAction(String taskName, LinkedList<Field> fields) {
 
 		this._feedback = new StringBuilder();
 		this._type = ActionType.ADD;
+		_defaultSort = new SortAction();
 
 		if (taskName != null) {
 			_newTask = new Task(taskName);
-
 		}
 
 		if (fields != null) {
@@ -27,17 +28,21 @@ public class AddAction extends Action {
 			this._feedback.append("Nothing is added. ");
 			this._isSuccess = false;
 			return;
-		}
+		} else {
+			workingList.add(_newTask);
+			workingListMaster.add(_newTask);
 
-		workingList.add(_newTask);
-		workingListMaster.add(_newTask);
-		
-		this._isSuccess = true;
-		this._feedback.append("Task: \"" + _newTask.getName() + "\" added. ");
+			this._isSuccess = true;
+			this._feedback.append("Task: \"" + _newTask.getName()
+					+ "\" added. ");
 
-		if (_editAction != null) {
-			_editAction.execute();
-			this._feedback.append(_editAction.getFeedback().toString());
+			if (_editAction != null) {
+				_editAction.execute(workingList, workingListMaster);
+				this._feedback.append(_editAction.getFeedback().toString());
+				if (!_editAction.isSuccess()) {
+					_defaultSort.execute(workingList, workingListMaster);
+				}
+			}
 		}
 	}
 }
