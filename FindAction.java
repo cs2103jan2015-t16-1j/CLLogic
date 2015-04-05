@@ -2,19 +2,21 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
+import org.joda.time.chrono.AssembledChronology.Fields;
+
 public class FindAction extends Action {
 
 	private LinkedList<Field> _fields;
 	private boolean _findAll;
-	private boolean _lastSearch;
+	private int _failCount;
 
 	public FindAction(LinkedList<Field> fields, boolean findAll) {
 		this._isSuccess = false;
-		_lastSearch = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.FIND;
 		_findAll = findAll;
 		_fields = fields;
+		_failCount = 0;
 	}
 
 	@Override
@@ -28,7 +30,7 @@ public class FindAction extends Action {
 		}
 
 		if (_fields == null || _fields.isEmpty()) {
-			System.out.println("no field");
+			System.out.println("No field entered. ");
 			return;
 		}
 
@@ -36,19 +38,22 @@ public class FindAction extends Action {
 		copyList(workingListMaster, bufferList);
 
 		for (Field field : _fields) {
-
 			filterWorkingList(field, bufferList);
-
 			if (bufferList.isEmpty()) {
 				this._feedback.append("No matches found. ");
 				return;
 			}
 		}
 
-		copyList(bufferList, workingList);
-		this._isSuccess = true;
-		this._feedback.append(workingList.size() + " matches found. ");
-		new SortAction().execute(workingList, workingListMaster);
+		if (_failCount == _fields.size()) {
+			this._feedback.append("No matches found. ");
+			return;
+		} else {
+			copyList(bufferList, workingList);
+			this._isSuccess = true;
+			this._feedback.append(workingList.size() + " matches found. ");
+			new SortAction().execute(workingList, workingListMaster);
+		}
 	}
 
 	private void filterWorkingList(Field field, LinkedList<Task> workingList) {
@@ -56,6 +61,7 @@ public class FindAction extends Action {
 		FieldType fieldType = field.getFieldType();
 
 		if (fieldType == null) {
+			_failCount++;
 			return;
 		}
 
@@ -66,30 +72,18 @@ public class FindAction extends Action {
 			break;
 		case PRIORITY:
 			String priority = field.getPriority();
-			if (priority == null) {
-				return;
-			}
 			filterByPriority(priority, workingList);
 			break;
 		case COMPLETED:
 			FieldCriteria yesNoC = field.getCriteria();
-			if (yesNoC == null) {
-				return;
-			}
 			filterByCompleteStatus(yesNoC, workingList);
 			break;
 		case OVERDUE:
 			FieldCriteria yesNoO = field.getCriteria();
-			if (yesNoO == null) {
-				return;
-			}
 			filterByOverdueStatus(yesNoO, workingList);
 			break;
 		case TASK_NAME:
 			String taskName = field.getTaskName();
-			if (taskName == null || taskName.trim().isEmpty()) {
-				return;
-			}
 			filterByName(taskName, workingList);
 			break;
 		default:
@@ -99,8 +93,9 @@ public class FindAction extends Action {
 	}
 
 	private void filterByName(String taskName, LinkedList<Task> workingList) {
-		if (taskName == null) {
+		if (taskName == null || taskName.trim().isEmpty()) {
 			this._feedback.append("No task name keywords entered. ");
+			_failCount++;
 			return;
 		}
 		String keywords[] = taskName.split(" ");
@@ -170,8 +165,15 @@ public class FindAction extends Action {
 
 	private void filterByOverdueStatus(FieldCriteria criteria,
 			LinkedList<Task> workingList) {
+		
+		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
+			_feedback.append("Overdue criteria not entered. ");
+			_failCount++;
+			return;
+		}
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
+
 		for (Task currTask : workingList) {
 			if ((currTask.getIsOverdue() && criteria == FieldCriteria.YES)
 					|| (!currTask.getIsOverdue() && criteria == FieldCriteria.NO)) {
@@ -184,6 +186,12 @@ public class FindAction extends Action {
 	private void filterByCompleteStatus(FieldCriteria criteria,
 			LinkedList<Task> workingList) {
 
+		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
+			_feedback.append("Completed criteria not entered. ");
+			_failCount++;
+			return;
+		}
+
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for (Task currTask : workingList) {
 			if ((currTask.getIsCompleted() && criteria == FieldCriteria.YES)
@@ -195,6 +203,13 @@ public class FindAction extends Action {
 	}
 
 	private void filterByPriority(String priority, LinkedList<Task> workingList) {
+
+		if (priority == null) {
+			_feedback.append("Priority level not entered. ");
+			_failCount++;
+			return;
+		}
+
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for (Task currTask : workingList) {
 			if (currTask.getPriority() != null
@@ -212,6 +227,7 @@ public class FindAction extends Action {
 
 		if (criteria == null) {
 			_feedback.append("Date criteria not entered. ");
+			_failCount++;
 			return;
 		}
 
@@ -234,7 +250,8 @@ public class FindAction extends Action {
 	private void filterByDateRange(Calendar[] dateRange, FieldType fieldType,
 			FieldCriteria criteria, LinkedList<Task> workingList) {
 
-		if (fieldType == null || criteria == null || dateRange == null) {
+		if (dateRange == null) {
+			_failCount++;
 			return;
 		}
 
@@ -284,10 +301,6 @@ public class FindAction extends Action {
 
 	private void filterBySingleDate(Calendar date, FieldType fieldType,
 			FieldCriteria criteria, LinkedList<Task> workingList) {
-
-		if (fieldType == null || criteria == null) {
-			return;
-		}
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 
@@ -351,8 +364,7 @@ public class FindAction extends Action {
 		copyList(bufferList, workingList);
 	}
 
-	private <E> void copyList(LinkedList<E> fromList,
-			LinkedList<E> toList) {
+	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));

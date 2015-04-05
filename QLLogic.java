@@ -189,17 +189,18 @@ public class QLLogic {
 		CommandParser cp = new CommandParser(command);
 		feedback.append(cp.getFeedback().toString());
 
+		/*
 		// test
 		for (Field field : cp.getFields()) {
 			System.out.println(field);
 		}
+		*/
 
 		Action action = cp.getAction();
-		feedback.append(cp.getFeedback());
 		if(action == null) {
-			
 			return;
 		}
+		
 		action.execute(_workingList, _workingListMaster);
 		feedback.append(action.getFeedback().toString());
 		

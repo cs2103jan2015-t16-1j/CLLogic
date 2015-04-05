@@ -27,11 +27,8 @@ public class FieldParser {
 
 	private void parseField() {
 		String[] typeAndContent = _fieldString.split(" ", 2);
-		if (typeAndContent.length == 2) {
-			determineType(typeAndContent[0].trim());
-			if (_fieldType == null) {
-				return;
-			}
+		determineType(typeAndContent[0].trim());
+		if (typeAndContent.length == 2 && _fieldType != null) {
 			determineContent(typeAndContent[1].trim());
 		}
 	}
@@ -123,7 +120,7 @@ public class FieldParser {
 	private void determineFindDate(String content) {
 		String[] contents = content.split(" ", 2);
 		determineCriteria(contents[0].trim());
-		if(_fieldCriteria == null) {
+		if (_fieldCriteria == null) {
 			return;
 		}
 		if (contents.length == 2) {

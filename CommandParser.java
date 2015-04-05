@@ -72,29 +72,26 @@ public class CommandParser {
 
 		String actionString = actionAndContents[0].trim();
 		determineActionType(actionString);
-
 		if (_actionType == null) {
-			_feedback.append("Invalid action type. ");
 			return;
 		}
-
-		String fieldsString;
 
 		switch (_actionType) {
 		case ADD:
 			if (actionAndContents.length == 1) {
-				_feedback.append("No task name entered. ");
+				_feedback.append("No task name deteced. ");
 				return;
 			}
 			System.out.println(actionAndContents[1]);
-			extractTaskName(actionAndContents[1].trim());
+			extractTaskName(actionAndContents[1]);
 			if (_taskName == null) {
-				_feedback.append("No task name entered. ");
+				_feedback.append("No task name deteced. ");
 				return;
 			}
-			actionAndContents[1] = actionAndContents[1].trim()
-					.replaceFirst(Pattern.quote("\"" + _taskName + "\""), "")
-					.trim();
+			actionAndContents[1] = actionAndContents[1]
+					.substring(actionAndContents[1].indexOf(92))
+					.replaceFirst(Pattern.quote("\\"), "").trim();
+			System.out.println(actionAndContents[1]);
 			break;
 		case EDIT:
 		case DELETE:
@@ -115,7 +112,7 @@ public class CommandParser {
 			return;
 		}
 
-		fieldsString = convertToPrim(actionAndContents[1]).trim();
+		String fieldsString = convertToPrim(actionAndContents[1]).trim();
 		System.out.println(fieldsString);
 		determineActionDetails(fieldsString);
 	}
@@ -146,6 +143,26 @@ public class CommandParser {
 	}
 
 	private void extractTaskName(String fieldsString) {
+		// check for '\' character - ascii 92
+		int stopIndex = fieldsString.indexOf(92);
+		if (stopIndex == -1) {
+			_feedback
+					.append("Please denote end of task name with the \"\\\" character");
+			return;
+		} else if (stopIndex == 0) {
+			_feedback.append("Task name entered is blank. ");
+			return;
+		} else {
+			String taskName = fieldsString.substring(0, stopIndex).trim();
+			if (taskName.isEmpty()) {
+				_feedback.append("Task name entered is blank. ");
+			} else {
+				_taskName = taskName;
+			}
+		}
+	}
+
+	private void extractTaskNameWithQuotes(String fieldsString) {
 		int quoteStart = -1, quoteEnd = -1;
 		int i, j;
 		for (i = 0; i < fieldsString.length(); i++) {
@@ -204,6 +221,7 @@ public class CommandParser {
 
 			_actionType = ActionType.COMPLETE;
 		} else {
+			_feedback.append("Invalid action type. ");
 			return;
 		}
 	}
