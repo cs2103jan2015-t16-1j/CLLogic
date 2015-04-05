@@ -149,7 +149,7 @@ public class QLLogic {
 						filepath);
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
-				QLStorage.saveFile(_masterList, filepath);
+				QLStorage.saveFile(_masterList, _filepath);
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 				feedback.append("Loaded from: \"" + filepath + "\". ");
 			} catch (Error e) {
