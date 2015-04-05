@@ -7,6 +7,8 @@ public class CommandParser {
 	private StringBuilder _feedback;
 
 	private String _taskName;
+	private String _userName;
+	private String _filePath;
 	private int _taskNumber;
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
@@ -53,6 +55,10 @@ public class CommandParser {
 			return new FindAction(_fields, _findAll);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
+		case EXPORT:
+			return new ExportAction(_userName);
+		case IMPORT:
+			return new ImportAction(_userName);
 		default:
 			return null;
 		}
@@ -221,6 +227,17 @@ public class CommandParser {
 				|| actionString.equalsIgnoreCase("C")) {
 
 			_actionType = ActionType.COMPLETE;
+
+		} else if (actionString.equalsIgnoreCase("EXPORT")
+				|| actionString.equalsIgnoreCase("EX")) {
+
+			_actionType = ActionType.EXPORT;
+
+		} else if (actionString.equalsIgnoreCase("IMPORT")
+				|| actionString.equalsIgnoreCase("IM")) {
+
+			_actionType = ActionType.IMPORT;
+
 		} else {
 			_feedback.append("Invalid action type. ");
 			return;
@@ -235,6 +252,14 @@ public class CommandParser {
 	}
 
 	private void determineFields(String fieldsString) {
+		if (fieldsString.equalsIgnoreCase("all")
+				|| fieldsString.equalsIgnoreCase("y")
+				|| fieldsString.equalsIgnoreCase("n")
+				|| _actionType == ActionType.EXPORT
+				|| _actionType == ActionType.IMPORT) {
+			return;
+		}
+
 		String[] fieldStringArray = fieldsString.split("-");
 
 		for (String fieldString : fieldStringArray) {
@@ -271,6 +296,11 @@ public class CommandParser {
 			}
 			break;
 
+		case EXPORT:
+		case IMPORT:
+			_userName = fieldsString;
+			break;
+
 		default:
 			break;
 		}
@@ -280,7 +310,9 @@ public class CommandParser {
 		if (fieldsString.charAt(0) != '-'
 				&& !fieldsString.equalsIgnoreCase("all")
 				&& !fieldsString.equalsIgnoreCase("y")
-				&& !fieldsString.equalsIgnoreCase("n")) {
+				&& !fieldsString.equalsIgnoreCase("n")
+				&& _actionType != ActionType.EXPORT
+				&& _actionType != ActionType.IMPORT) {
 			int indexDash = fieldsString.indexOf('-');
 			String wrongFields;
 			if (indexDash != -1) {

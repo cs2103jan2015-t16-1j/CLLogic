@@ -21,12 +21,18 @@ public class SortAction extends Action {
 	}
 
 	@Override
-	public void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster) {
-		execute(workingList);
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+		execute(displayList);
 	}
 
-	private void execute(LinkedList<Task> workingList) {
+	private void execute(LinkedList<Task> displayList) {
+		
+		if (_fields == null || _fields.isEmpty()) {
+			System.out.println("No field entered. ");
+			this._isSuccess = false;
+			return;
+		}
 
 		for (int i = _fields.size() - 1; i >= 0; i--) {
 
@@ -51,13 +57,13 @@ public class SortAction extends Action {
 
 			switch (field.getFieldType()) {
 			case DUE_DATE:
-				sortByDueDate(order, workingList);
+				sortByDueDate(order, displayList);
 				break;
 			case DURATION:
-				sortByDuration(order, workingList);
+				sortByDuration(order, displayList);
 				break;
 			case PRIORITY:
-				sortByPriority(order, workingList);
+				sortByPriority(order, displayList);
 				break;
 			default:
 				break;
@@ -66,34 +72,34 @@ public class SortAction extends Action {
 	}
 
 	private void sortByDuration(FieldCriteria order,
-			LinkedList<Task> workingList) {
+			LinkedList<Task> displayList) {
 		LinkedList<Task> tasksWithNoDuration = new LinkedList<Task>();
-		for (int i = 0; i < workingList.size(); i++) {
-			if (workingList.get(i).getDuration() == -1) {
-				Task removedTask = workingList.remove(i);
+		for (int i = 0; i < displayList.size(); i++) {
+			if (displayList.get(i).getDuration() == -1) {
+				Task removedTask = displayList.remove(i);
 				tasksWithNoDuration.add(removedTask);
 				i--;
 			}
 		}
 
-		for (int i = workingList.size() - 1; i >= 0; i--) {
+		for (int i = displayList.size() - 1; i >= 0; i--) {
 			boolean isSorted = true;
 			for (int j = 0; j < i; j++) {
-				Task taskLeft = workingList.get(j);
-				Task taskRight = workingList.get(j + 1);
+				Task taskLeft = displayList.get(j);
+				Task taskRight = displayList.get(j + 1);
 				switch (order) {
 				case ASCEND:
 					if (taskLeft.getDuration() > taskRight.getDuration()) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
 
 				case DESCEND:
 					if (taskLeft.getDuration() < taskRight.getDuration()) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
@@ -106,40 +112,40 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoDuration.addAll(workingList);
-		copyList(tasksWithNoDuration, workingList);
+		tasksWithNoDuration.addAll(displayList);
+		copyList(tasksWithNoDuration, displayList);
 	}
 
 	private void sortByPriority(FieldCriteria order,
-			LinkedList<Task> workingList) {
+			LinkedList<Task> displayList) {
 		
 		LinkedList<Task> tasksWithNoPriority = new LinkedList<Task>();
-		for (int i = 0; i < workingList.size(); i++) {
-			if (workingList.get(i).getPriorityInt() == 0) {
-				Task removedTask = workingList.remove(i);
+		for (int i = 0; i < displayList.size(); i++) {
+			if (displayList.get(i).getPriorityInt() == 0) {
+				Task removedTask = displayList.remove(i);
 				tasksWithNoPriority.add(removedTask);
 				i--;
 			}
 		}
 
-		for (int i = workingList.size() - 1; i >= 0; i--) {
+		for (int i = displayList.size() - 1; i >= 0; i--) {
 			boolean isSorted = true;
 			for (int j = 0; j < i; j++) {
-				Task taskLeft = workingList.get(j);
-				Task taskRight = workingList.get(j + 1);
+				Task taskLeft = displayList.get(j);
+				Task taskRight = displayList.get(j + 1);
 				switch (order) {
 				case ASCEND:
 					if (taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
 
 				case DESCEND:
 					if (taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
@@ -153,39 +159,39 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoPriority.addAll(workingList);
-		copyList(tasksWithNoPriority, workingList);
+		tasksWithNoPriority.addAll(displayList);
+		copyList(tasksWithNoPriority, displayList);
 	}
 
-	private void sortByDueDate(FieldCriteria order, LinkedList<Task> workingList) {
+	private void sortByDueDate(FieldCriteria order, LinkedList<Task> displayList) {
 
 		LinkedList<Task> tasksWithNoDueDate = new LinkedList<Task>();
-		for (int i = 0; i < workingList.size(); i++) {
-			if (workingList.get(i).getDueDate() == null) {
-				Task removedTask = workingList.remove(i);
+		for (int i = 0; i < displayList.size(); i++) {
+			if (displayList.get(i).getDueDate() == null) {
+				Task removedTask = displayList.remove(i);
 				tasksWithNoDueDate.add(removedTask);
 				i--;
 			}
 		}
 
-		for (int i = workingList.size() - 1; i >= 0; i--) {
+		for (int i = displayList.size() - 1; i >= 0; i--) {
 			boolean isSorted = true;
 			for (int j = 0; j < i; j++) {
-				Task taskLeft = workingList.get(j);
-				Task taskRight = workingList.get(j + 1);
+				Task taskLeft = displayList.get(j);
+				Task taskRight = displayList.get(j + 1);
 				switch (order) {
 				case ASCEND:
 					if (taskLeft.getDueDate().compareTo(taskRight.getDueDate()) > 0) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
 
 				case DESCEND:
 					if (taskLeft.getDueDate().compareTo(taskRight.getDueDate()) < 0) {
-						workingList.set(j + 1, taskLeft);
-						workingList.set(j, taskRight);
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
 						isSorted = false;
 					}
 					break;
@@ -197,8 +203,8 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoDueDate.addAll(workingList);
-		copyList(tasksWithNoDueDate, workingList);
+		tasksWithNoDueDate.addAll(displayList);
+		copyList(tasksWithNoDueDate, displayList);
 	}
 
 	private static <E> void copyList(LinkedList<E> fromList,

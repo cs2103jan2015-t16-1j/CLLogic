@@ -6,7 +6,7 @@ public class QLLogic {
 	public static LinkedList<Task> _displayList; // TODO change back to private
 	private static LinkedList<Task> _masterList;
 	private static String _filepath;
-	
+
 	private static HistoryManager _historyMgnr;
 
 	/** General methods **/
@@ -73,118 +73,108 @@ public class QLLogic {
 		return _masterList;
 	}
 
+	public static void executeUndo(StringBuilder feedback) {
+		_historyMgnr.undo(feedback);
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		QLStorage.saveFile(_masterList, _filepath);
+	}
+
+	public static void executeRedo(StringBuilder feedback) {
+		_historyMgnr.redo(feedback);
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		QLStorage.saveFile(_masterList, _filepath);
+	}
+
 	public static void executeCommand(String command, StringBuilder feedback) {
 
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
-			_historyMgnr.undo(feedback);
-			_displayList = _historyMgnr.getDisplayList();
-			_masterList = _historyMgnr.getMasterList();
-			QLStorage.saveFile(_masterList, _filepath);
+			executeUndo(feedback);
 			return;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
-			_historyMgnr.redo(feedback);
-			_displayList = _historyMgnr.getDisplayList();
-			_masterList = _historyMgnr.getMasterList();
-			QLStorage.saveFile(_masterList, _filepath);
+			executeRedo(feedback);
 			return;
 		}
 
-		if (command.indexOf(' ') != -1) {
-			String commandType = command.substring(0, command.indexOf(' '))
-					.trim();
-			if (commandType.equalsIgnoreCase("sync")
-					|| commandType.equalsIgnoreCase("sg")) {
-
-				String content = command.replaceFirst(commandType, "").trim();
-
-				if (content.indexOf(' ') != -1) {
-					String toFrom = content.substring(0, content.indexOf(' '))
-							.trim();
-					String userID = content.replaceFirst(toFrom, "").trim();
-
-					try {
-						if (toFrom.equalsIgnoreCase("from")) {
-							QLGoogleIntegration.syncFrom(userID, "quicklyst",
-									_masterList);
-							feedback.append("Synced from Google Calendar. ");
-						} else if (toFrom.equalsIgnoreCase("to")) {
-							QLGoogleIntegration.syncTo(userID, "quicklyst",
-									_masterList);
-							feedback.append("Synced to Google Calendar. ");
-						} else {
-							feedback.append("Invalid sync action. ");
-						}
-					} catch (Error e) {
-						feedback.append(e.getMessage());
-					}
-
-				} else {
-					feedback.append("Invalid sync action. ");
-				}
-
-				return;
-			}
+		if (command.split(" ", 2)[0].equalsIgnoreCase("save")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+			executeSave(command, feedback);
+			return;
 		}
 
-		if (command.indexOf(' ') != -1) {
-			String commandType = command.substring(0, command.indexOf(' '))
-					.trim();
-			String filepath = command.replaceFirst(commandType, " ").trim();
-
-			if (commandType.equalsIgnoreCase("load")
-					|| commandType.equalsIgnoreCase("l")) {
-
-				try {
-					setup(filepath);
-					feedback.append("Loaded from: " + filepath);
-					return;
-				} catch (Error e) {
-					feedback.append(e.getMessage());
-					return;
-				}
-			} else if (commandType.equalsIgnoreCase("save")
-					|| commandType.equalsIgnoreCase("s")) {
-
-				try {
-					QLStorage.saveFile(_masterList, filepath);
-					feedback.append("Saved to: " + filepath);
-				} catch (Error e) {
-					feedback.append(e.getMessage());
-				}
-				return;
-			}
+		if (command.split(" ", 2)[0].equalsIgnoreCase("load")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("l")) {
+			executeLoad(command, feedback);
+			return;
 		}
 
+		executeAction(command, feedback);
+		
+	}
+
+	private static void executeAction(String command, StringBuilder feedback) {
+		
 		CommandParser cp = new CommandParser(command);
 		feedback.append(cp.getFeedback().toString());
-
-		/*
-		// test
-		for (Field field : cp.getFields()) {
-			System.out.println(field);
-		}
-		*/
-
 		Action action = cp.getAction();
-		if(action == null) {
+		
+		if (action == null) {
 			return;
 		}
-		
+
 		action.execute(_displayList, _masterList);
 		feedback.append(action.getFeedback().toString());
-		
+
 		if (action.isSuccess()) {
 			QLStorage.saveFile(_masterList, _filepath);
-			_historyMgnr.updateUndoStack(_displayList, _masterList);
+			if (action.getType() != ActionType.EXPORT) {
+				_historyMgnr.updateUndoStack(_displayList, _masterList);
+			}
+		}
+	}
+
+	private static void executeLoad(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			try {
+				_displayList = QLStorage.loadFile(new LinkedList<Task>(),
+						filepath);
+				_masterList = new LinkedList<Task>();
+				copyList(_displayList, _masterList);
+				QLStorage.saveFile(_masterList, filepath);
+				_historyMgnr.updateUndoStack(_displayList, _masterList);
+				feedback.append("Loaded from: \"" + filepath + "\". ");
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+		}
+	}
+
+	private static void executeSave(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			try {
+				QLStorage.saveFile(_masterList, filepath);
+				feedback.append("Saved to: \"" + filepath + "\". ");
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
 		}
 	}
 
 	/** Multi-command methods **/
-	
+
 	private static <E> void copyList(LinkedList<E> fromList,
 			LinkedList<E> toList) {
 		toList.clear();

@@ -19,12 +19,12 @@ public class CompleteAction extends Action {
 	}
 
 	@Override
-	public void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster) {
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
 
-		if (isTaskIndexInRange(workingList)) {
+		if (isTaskIndexInRange(displayList)) {
 
-			Task taskToComplete = workingList.get(_taskIndex);
+			Task taskToComplete = displayList.get(_taskIndex);
 
 			if(_yesNo == null) {
 				taskToComplete.toggleCompleted();
@@ -47,8 +47,8 @@ public class CompleteAction extends Action {
 		}
 	}
 
-	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {
-		if (_taskIndex < 0 || _taskIndex >= workingList.size()) {
+	private boolean isTaskIndexInRange(LinkedList<Task> displayList) {
+		if (_taskIndex < 0 || _taskIndex >= displayList.size()) {
 			return false;
 		} else {
 			return true;

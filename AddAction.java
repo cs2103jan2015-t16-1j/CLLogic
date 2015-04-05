@@ -21,26 +21,26 @@ public class AddAction extends Action {
 		}
 	}
 
-	public void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster) {
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
 
 		if (_newTask == null) {
 			this._feedback.append("Nothing is added. ");
 			this._isSuccess = false;
 			return;
 		} else {
-			workingList.add(_newTask);
-			workingListMaster.add(_newTask);
+			displayList.add(_newTask);
+			masterList.add(_newTask);
 
 			this._isSuccess = true;
 			this._feedback.append("Task: \"" + _newTask.getName()
 					+ "\" added. ");
 
 			if (_editAction != null) {
-				_editAction.execute(workingList, workingListMaster);
+				_editAction.execute(displayList, masterList);
 				this._feedback.append(_editAction.getFeedback().toString());
 				if (!_editAction.isSuccess()) {
-					_defaultSort.execute(workingList, workingListMaster);
+					_defaultSort.execute(displayList, masterList);
 				}
 			}
 		}

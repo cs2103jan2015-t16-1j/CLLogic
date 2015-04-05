@@ -36,20 +36,20 @@ public class EditAction extends Action {
 	}
 
 	@Override
-	public void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster) {
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
 		
 		if(_task != null) {
 			execute();
-		} else if (isTaskIndexInRange(workingList)) {
-			_task = workingList.get(_taskIndex);
+		} else if (isTaskIndexInRange(displayList)) {
+			_task = displayList.get(_taskIndex);
 			execute();
 		} else {
 			this._feedback.append("Task # out of range. ");
 		}
 		
 		if(this._isSuccess) {
-			_defaultSort.execute(workingList, workingListMaster);
+			_defaultSort.execute(displayList, masterList);
 		}
 	}
 
@@ -273,8 +273,8 @@ public class EditAction extends Action {
 		}
 	}
 
-	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {
-		if (_taskIndex < 0 || _taskIndex >= workingList.size()) {
+	private boolean isTaskIndexInRange(LinkedList<Task> displayList) {
+		if (_taskIndex < 0 || _taskIndex >= displayList.size()) {
 			return false;
 		} else {
 			return true;
