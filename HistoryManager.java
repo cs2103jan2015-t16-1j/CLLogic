@@ -18,6 +18,8 @@ public class HistoryManager {
 				masterListInit);
 		_undoStack.push(masterListInit);
 		_undoStack.push(displayListInit);
+		_displayList = displayListInit;
+		_masterList = masterListInit;
 	}
 
 	public LinkedList<Task> getDisplayList() {
