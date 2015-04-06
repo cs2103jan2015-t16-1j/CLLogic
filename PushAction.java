@@ -1,12 +1,12 @@
 import java.util.LinkedList;
 
-public class ImportAction extends SyncAction {
+public class PushAction extends SyncAction {
 
-	public ImportAction(String userName) {
+	public PushAction(String userName) {
 		setUserName(userName);
 		setSuccess(false);
 		this._feedback = new StringBuilder();
-		this._type = ActionType.IMPORT;
+		this._type = ActionType.PUSH;
 	}
 
 	@Override
@@ -19,20 +19,14 @@ public class ImportAction extends SyncAction {
 			return;
 		} else {
 			try {
-				QLGoogleIntegration.syncFrom(userName, "quicklyst", masterList);
-				copyList(masterList, displayList);
-				getFeedback().append("Synced from Google Calendar. ");
+				QLGoogleIntegration.syncTo(userName, "quicklyst", masterList);
+				getFeedback().append("Synced to Google Calendar. ");
 				setSuccess(true);
 			} catch (Error e) {
 				getFeedback().append(e.getMessage());
 			}
 		}
 	}
+	
 
-	private static <E> void copyList(LinkedList<E> fromList,
-			LinkedList<E> toList) {
-		toList.clear();
-		for (int i = 0; i < fromList.size(); i++)
-			toList.add(fromList.get(i));
-	}
 }

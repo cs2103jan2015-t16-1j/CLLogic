@@ -11,4 +11,9 @@ public class QLStorage {
 		return new LinkedList<Task>();
 	}
 
+	public static boolean isValidFile(String filepath) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
 }

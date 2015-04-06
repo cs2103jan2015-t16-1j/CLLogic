@@ -55,10 +55,10 @@ public class CommandParser {
 			return new FindAction(_fields, _findAll);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
-		case EXPORT:
-			return new ExportAction(_userName);
-		case IMPORT:
-			return new ImportAction(_userName);
+		case PUSH:
+			return new PushAction(_userName);
+		case PULL:
+			return new PullAction(_userName);
 		default:
 			return null;
 		}
@@ -228,15 +228,15 @@ public class CommandParser {
 
 			_actionType = ActionType.COMPLETE;
 
-		} else if (actionString.equalsIgnoreCase("EXPORT")
-				|| actionString.equalsIgnoreCase("EX")) {
+		} else if (actionString.equalsIgnoreCase("PUSH")
+				|| actionString.equalsIgnoreCase("PS")) {
 
-			_actionType = ActionType.EXPORT;
+			_actionType = ActionType.PUSH;
 
-		} else if (actionString.equalsIgnoreCase("IMPORT")
-				|| actionString.equalsIgnoreCase("IM")) {
+		} else if (actionString.equalsIgnoreCase("PULL")
+				|| actionString.equalsIgnoreCase("PL")) {
 
-			_actionType = ActionType.IMPORT;
+			_actionType = ActionType.PULL;
 
 		} else {
 			_feedback.append("Invalid action type. ");
@@ -255,8 +255,8 @@ public class CommandParser {
 		if (fieldsString.equalsIgnoreCase("all")
 				|| fieldsString.equalsIgnoreCase("y")
 				|| fieldsString.equalsIgnoreCase("n")
-				|| _actionType == ActionType.EXPORT
-				|| _actionType == ActionType.IMPORT) {
+				|| _actionType == ActionType.PUSH
+				|| _actionType == ActionType.PULL) {
 			return;
 		}
 
@@ -296,8 +296,8 @@ public class CommandParser {
 			}
 			break;
 
-		case EXPORT:
-		case IMPORT:
+		case PUSH:
+		case PULL:
 			_userName = fieldsString;
 			break;
 
@@ -311,8 +311,8 @@ public class CommandParser {
 				&& !fieldsString.equalsIgnoreCase("all")
 				&& !fieldsString.equalsIgnoreCase("y")
 				&& !fieldsString.equalsIgnoreCase("n")
-				&& _actionType != ActionType.EXPORT
-				&& _actionType != ActionType.IMPORT) {
+				&& _actionType != ActionType.PUSH
+				&& _actionType != ActionType.PULL) {
 			int indexDash = fieldsString.indexOf('-');
 			String wrongFields;
 			if (indexDash != -1) {

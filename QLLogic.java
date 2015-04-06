@@ -5,16 +5,22 @@ public class QLLogic {
 
 	public static LinkedList<Task> _displayList; // TODO change back to private
 	private static LinkedList<Task> _masterList;
-	private static String _filepath;
+	private static String _filePath;
 
 	private static HistoryManager _historyMgnr;
 
 	/** General methods **/
-	public static void setup(String fileName) {
-		_filepath = fileName;
-		_displayList = QLStorage.loadFile(new LinkedList<Task>(), fileName);
-		_masterList = new LinkedList<Task>();
-		copyList(_displayList, _masterList);
+	public static void setup(StringBuilder feedback) {
+		try {
+			_filePath = QLSettings.getPrefFilePath();
+			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+		} catch (Error e) {
+			feedback.append("Preferred task file does not exist. " + "Default task file is used. ");
+			_filePath = QLSettings.getDefaultFilePath();
+			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+		}
+		_displayList = new LinkedList<Task>();
+		copyList(_masterList, _displayList);
 		_historyMgnr = new HistoryManager(_displayList, _masterList);
 	}
 
@@ -77,14 +83,14 @@ public class QLLogic {
 		_historyMgnr.undo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		QLStorage.saveFile(_masterList, _filepath);
+		QLStorage.saveFile(_masterList, _filePath);
 	}
 
 	public static void executeRedo(StringBuilder feedback) {
 		_historyMgnr.redo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		QLStorage.saveFile(_masterList, _filepath);
+		QLStorage.saveFile(_masterList, _filePath);
 	}
 
 	public static void executeCommand(String command, StringBuilder feedback) {
@@ -113,16 +119,43 @@ public class QLLogic {
 			return;
 		}
 
+		if (command.split(" ", 2)[0].equalsIgnoreCase("cd")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+			executeChangeDir(command, feedback);
+			return;
+		}
+
 		executeAction(command, feedback);
-		
+
+	}
+
+	private static void executeChangeDir(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			if (QLStorage.isValidFile(filepath)) {
+				QLSettings.updatePrefFilePath(filepath);
+				_filePath = filepath;
+				_masterList = QLStorage.loadFile(new LinkedList<Task>(),
+						filepath);
+				_displayList = new LinkedList<Task>();
+				copyList(_masterList, _displayList);
+				_historyMgnr = new HistoryManager(_displayList, _masterList);
+				feedback.append("Directory changed. You are editing tasks in file: \"" + filepath + "\".");
+			} else {
+				feedback.append("Preferred task file does not exist. "  + "Directory is not changed. ");
+			}
+		}
 	}
 
 	private static void executeAction(String command, StringBuilder feedback) {
-		
+
 		CommandParser cp = new CommandParser(command);
 		feedback.append(cp.getFeedback().toString());
 		Action action = cp.getAction();
-		
+
 		if (action == null) {
 			return;
 		}
@@ -131,8 +164,8 @@ public class QLLogic {
 		feedback.append(action.getFeedback().toString());
 
 		if (action.isSuccess()) {
-			QLStorage.saveFile(_masterList, _filepath);
-			if (action.getType() != ActionType.EXPORT) {
+			QLStorage.saveFile(_masterList, _filePath);
+			if (action.getType() != ActionType.PUSH) {
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 			}
 		}
@@ -149,7 +182,7 @@ public class QLLogic {
 						filepath);
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
-				QLStorage.saveFile(_masterList, _filepath);
+				QLStorage.saveFile(_masterList, _filePath);
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 				feedback.append("Loaded from: \"" + filepath + "\". ");
 			} catch (Error e) {
